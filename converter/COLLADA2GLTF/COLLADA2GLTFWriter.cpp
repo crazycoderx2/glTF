@@ -239,7 +239,7 @@ namespace GLTF
                                        COLLADABU::Math::Matrix4 parentMatrix,
                                        SceneFlatteningInfo* sceneFlatteningInfo) {
         GLTFAsset *asset = this->_asset.get();
-        bool shouldExportTRS = 1 || CONFIG_BOOL(asset, "alwaysExportTRS");
+        bool shouldExportTRS = CONFIG_BOOL(asset, "alwaysExportTRS");
         const NodePointerArray& nodes = node->getChildNodes();
         std::string nodeOriginalID = node->getOriginalId();
         if (nodeOriginalID.length() == 0) {
