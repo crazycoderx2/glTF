@@ -318,25 +318,25 @@ namespace GLTF
             animatedTarget->setString("transformId", animationID);
 
             if (tr->getTransformationType() == COLLADAFW::Transformation::MATRIX)  {
-                animatedTarget->setString("path", "MATRIX");
+                animatedTarget->setString(kPath, "MATRIX");
                 animatedTargets->push_back(animatedTarget);
                 shouldExportTRS = true;
             }
             
             if (tr->getTransformationType() == COLLADAFW::Transformation::TRANSLATE)  {
-                animatedTarget->setString("path", "translation");
+                animatedTarget->setString(kPath, kTranslation);
                 animatedTargets->push_back(animatedTarget);
                 shouldExportTRS = true;
             }
             
             if (tr->getTransformationType() == COLLADAFW::Transformation::ROTATE)  {
-                animatedTarget->setString("path", "rotation");
+                animatedTarget->setString(kPath, kRotation);
                 animatedTargets->push_back(animatedTarget);
                 shouldExportTRS = true;
             }
           
             if (tr->getTransformationType() == COLLADAFW::Transformation::SCALE)  {
-                animatedTarget->setString("path", "scale");
+                animatedTarget->setString(kPath, kScale);
                 animatedTargets->push_back(animatedTarget);
                 shouldExportTRS = true;
             }
@@ -356,14 +356,14 @@ namespace GLTF
             bool exportTranslation = !(!exportDefaultValues &&
                                        ((translation[0] == 0) && (translation[1] == 0) && (translation[2] == 0)));
             if (exportTranslation)
-                nodeObject->setValue("translation", serializeVec3(translation[0], translation[1], translation[2]));
+                nodeObject->setValue(kTranslation, serializeVec3(translation[0], translation[1], translation[2]));
             
             //hum what should be the identity for axis angle ? https://github.com/KhronosGroup/glTF/issues/197
-            nodeObject->setValue("rotation", serializeVec4(rotation[0], rotation[1], rotation[2], rotation[3]));
+            nodeObject->setValue(kRotation, serializeVec4(rotation[0], rotation[1], rotation[2], rotation[3]));
 
             bool exportScale = !(!exportDefaultValues && ((scale[0] == 1) && (scale[1] == 1) && (scale[2] == 1)));
             if (exportScale)
-                nodeObject->setValue("scale", serializeVec3(scale[0], scale[1], scale[2]));
+                nodeObject->setValue(kScale, serializeVec3(scale[0], scale[1], scale[2]));
             
         } else {
             //FIXME: OpenCOLLADA typo

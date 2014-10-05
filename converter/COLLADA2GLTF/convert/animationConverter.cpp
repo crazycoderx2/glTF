@@ -59,8 +59,8 @@ namespace GLTF
                         if (asset->_uniqueIDToOpenCOLLADAObject.count(targetID) != 0) {
                             cvtAnimation->targets()->setValue(targetID, animatedTarget);
                             
-                            std::string path = animatedTarget->getString("path");
-                            if (path == "rotation") {
+                            std::string path = animatedTarget->getString(kPath);
+                            if (path == kRotation) {
                                 std::string transformID = animatedTarget->getString("transformId");
                                 animationFlattener = cvtAnimation->animationFlattenerForTargetUID(targetID);
                                 
@@ -88,7 +88,7 @@ namespace GLTF
                     
                     for (size_t animatedTargetIndex = 0 ; animatedTargetIndex < animatedTargets->size() ; animatedTargetIndex++) {
                         shared_ptr<JSONObject> animatedTarget = (*animatedTargets)[animatedTargetIndex];
-                        if (animatedTarget->getString("path") == "MATRIX") {
+                        if (animatedTarget->getString(kPath) == "MATRIX") {
                             std::string targetID = animatedTarget->getString(kTarget);
                             if (asset->_uniqueIDToOpenCOLLADAObject.count(targetID) != 0) {
                                 cvtAnimation->targets()->setValue(targetID, animatedTarget);
@@ -122,8 +122,8 @@ namespace GLTF
                         if (asset->_uniqueIDToOpenCOLLADAObject.count(targetID) != 0) {
                             cvtAnimation->targets()->setValue(targetID, animatedTarget);
                             
-                            std::string path = animatedTarget->getString("path");
-                            if (path == "translation") {
+                            std::string path = animatedTarget->getString(kPath);
+                            if (path == kTranslation) {
                                 std::string transformID = animatedTarget->getString("transformId");
                                 animationFlattener = cvtAnimation->animationFlattenerForTargetUID(targetID);
                                 
@@ -136,7 +136,7 @@ namespace GLTF
                                                                                                             translations[offset + 2]));
                                     animationFlattener->insertTransformAtTime(transformID, translate, timeValues[k]);
                                 }
-                            } else if (path == "scale") {
+                            } else if (path == kScale) {
                                 std::string transformID = animatedTarget->getString("transformId");
                                 animationFlattener = cvtAnimation->animationFlattenerForTargetUID(targetID);
                                 float* timeValues = (float*)timeBufferView->getBufferDataByApplyingOffset();
@@ -162,8 +162,8 @@ namespace GLTF
                         if (asset->_uniqueIDToOpenCOLLADAObject.count(targetID) != 0) {
                             cvtAnimation->targets()->setValue(targetID, animatedTarget);
 
-                            std::string path = animatedTarget->getString("path");
-                            if (path == "rotation") {
+                            std::string path = animatedTarget->getString(kPath);
+                            if (path == kRotation) {
                                 std::string transformID = animatedTarget->getString("transformId");
                                 ANIMATIONFLATTENER_FOR_PATH_AND_TARGETID(path, targetID);
 
@@ -187,7 +187,7 @@ namespace GLTF
                     std::string targetID = animatedTarget->getString(kTarget);
                     if (asset->_uniqueIDToOpenCOLLADAObject.count(targetID) != 0) {
                         cvtAnimation->targets()->setValue(targetID, animatedTarget);
-                        std::string path = animatedTarget->getString("path");
+                        std::string path = animatedTarget->getString(kPath);
                         std::string transformID = animatedTarget->getString("transformId");
 
                         ANIMATIONFLATTENER_FOR_PATH_AND_TARGETID(path, targetID);

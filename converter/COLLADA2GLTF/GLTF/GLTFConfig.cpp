@@ -91,9 +91,9 @@ namespace GLTF
         shared_ptr<JSONObject> transform(new JSONObject());
         quantization->setValue("transform", transform);
 
-        transform->setUnsignedInt32("translation", 17);
-        transform->setUnsignedInt32("rotation", 17);
-        transform->setUnsignedInt32("scale", 17);
+        transform->setUnsignedInt32(kTranslation, 17);
+        transform->setUnsignedInt32(kRotation, 17);
+        transform->setUnsignedInt32(kScale, 17);
     }
     
     bool GLTFConfig::initWithPath(const std::string& path) {

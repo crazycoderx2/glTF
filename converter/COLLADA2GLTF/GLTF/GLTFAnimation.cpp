@@ -132,7 +132,7 @@ namespace GLTF
         trChannel->setString("sampler", cvtAnimation->getSamplerIDForName(path));
         trChannel->setValue(kTarget, trTarget);
         trTarget->setString("id", targetID);
-        trTarget->setString("path", path);
+        trTarget->setString(kPath, path);
         cvtAnimation->channels()->appendValue(trChannel);
     }
 
@@ -150,36 +150,36 @@ namespace GLTF
         if (animationFlattener->hasAnimatedScale()) {
             //Scale
             setupAndWriteAnimationParameter(this,
-                                            "scale",
+                                            kScale,
                                             "FLOAT_VEC3",
                                             (unsigned char*)scales,
                                             count * sizeof(float) * 3, false,
                                             asset);
-            __AddChannel(this, targetID, "scale");
+            __AddChannel(this, targetID, kScale);
             free(scales);
         }
         
         if (animationFlattener->hasAnimatedTranslation()) {
             //Translation
             setupAndWriteAnimationParameter(this,
-                                            "translation",
+                                            kTranslation,
                                             "FLOAT_VEC3",
                                             (unsigned char*)positions,
                                             count * sizeof(float) * 3, false,
                                             asset);
-            __AddChannel(this, targetID, "translation");
+            __AddChannel(this, targetID, kTranslation);
             free(positions);
         }
         
         if (animationFlattener->hasAnimatedRotation()) {
             //Rotation
             setupAndWriteAnimationParameter(this,
-                                            "rotation",
+                                            kRotation,
                                             "FLOAT_VEC4",
                                             (unsigned char*)rotations,
                                             count * sizeof(float) * 4, false,
                                             asset);
-            __AddChannel(this, targetID, "rotation");
+            __AddChannel(this, targetID, kRotation);
             free(rotations);
         }
     }

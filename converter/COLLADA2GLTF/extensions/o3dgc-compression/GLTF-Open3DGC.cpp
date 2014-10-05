@@ -462,11 +462,11 @@ namespace GLTF
         int quantization = 17;
         if (path == "TIME") {
             quantization = config->unsignedInt32ForKeyPath("extensions.Open3DGC.quantization.TIME");
-        } else if (path == "translation") {
+        } else if (path == kTranslation) {
             quantization = config->unsignedInt32ForKeyPath("extensions.Open3DGC.quantization.transform.translation");
-        } else if (path == "rotation") {
+        } else if (path == kRotation) {
             quantization = config->unsignedInt32ForKeyPath("extensions.Open3DGC.quantization.transform.rotation");
-        } else if (path == "scale") {
+        } else if (path == kScale) {
             quantization = config->unsignedInt32ForKeyPath("extensions.Open3DGC.quantization.transform.scale");
         }
         
