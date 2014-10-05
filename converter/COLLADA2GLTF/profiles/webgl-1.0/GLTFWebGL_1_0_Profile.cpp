@@ -622,5 +622,7 @@ namespace GLTF
         }
     }
 
-    std::string GLTFWebGL_1_0_Profile::id() { return "WebGL 1.0.2"; }
+    std::string GLTFWebGL_1_0_Profile::API() { return "WebGL"; }
+    
+    std::string GLTFWebGL_1_0_Profile::version() { return "1.0.2"; }
 }

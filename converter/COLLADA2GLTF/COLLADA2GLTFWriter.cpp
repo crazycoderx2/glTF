@@ -114,8 +114,11 @@ namespace GLTF
         
         assetObject->setString("generator",version);
         assetObject->setBool(kPremultipliedAlpha, CONFIG_BOOL(asset, kPremultipliedAlpha));
-        assetObject->setString(kProfile, asset->profile()->id());
-        assetObject->setDouble(kVersion, glTFVersion);
+        
+        shared_ptr<JSONObject> profile = assetObject->createObjectIfNeeded(kProfile);
+        profile->setString(kAPI, asset->profile()->API());
+        profile->setString(kVersion, asset->profile()->version());
+        assetObject->setString(kVersion, glTFVersion);
 
         _metersPerUnit = globalAsset->getUnit().getLinearUnitMeter();
         if (globalAsset->getUpAxisType() == COLLADAFW::FileInfo::X_UP ||

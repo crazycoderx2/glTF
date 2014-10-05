@@ -35,7 +35,8 @@ namespace GLTF
         virtual unsigned int getGLTypeForComponentTypeAndType(const std::string& componentType, const std::string& type) = 0;
         virtual std::string getGLSLTypeForGLType(unsigned int glType) = 0;
         virtual size_t getComponentsCountForGLType(unsigned int glType) = 0;
-        virtual std::string id() = 0;
+        virtual std::string API() = 0;
+        virtual std::string version() = 0;
         virtual size_t sizeOfGLType(unsigned int glType) = 0;
         virtual unsigned int getGLComponentTypeForGLType(unsigned int glType) = 0;
         virtual std::string getTypeForGLType(unsigned int glType) = 0;

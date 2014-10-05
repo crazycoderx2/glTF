@@ -33,7 +33,6 @@ namespace GLTF
         GLTFWebGL_1_0_Profile();
         virtual ~GLTFWebGL_1_0_Profile();
 
-        std::string id();
         unsigned int getGLTypeForComponentTypeAndType(const std::string& componentType, const std::string& type);
         std::string getGLSLTypeForGLType(unsigned int glType);
         size_t getComponentsCountForGLType(unsigned int glType);
@@ -42,6 +41,8 @@ namespace GLTF
         std::string getTypeForGLType(unsigned int glType);
         virtual std::shared_ptr<JSONValue> defaultValueForState(const std::string& state);
         virtual bool isDefaultValueForState(const std::string& state, std::shared_ptr<JSONValue> value);
+        virtual std::string API();
+        virtual std::string version();
     private:
         std::shared_ptr <JSONObject> _defaultValues;
     };
