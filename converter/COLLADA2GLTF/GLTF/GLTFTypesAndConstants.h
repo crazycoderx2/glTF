@@ -91,6 +91,7 @@ const std::string kJointNames = "jointNames";
 const std::string kDoubleSided = "doubleSided";
 const std::string kPath = "path";
 const std::string kRotation = "rotation";
+const std::string kOrientation = "orientation";
 const std::string kScale = "scale";
 const std::string kTranslation = "translation";
 
@@ -99,6 +100,8 @@ const std::string MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE";
 const std::string MODELVIEWINVERSE = "MODELVIEWINVERSE";
 const std::string PROJECTION = "PROJECTION";
 const std::string JOINTMATRIX = "JOINTMATRIX";
+
+const std::string kExportOrientation = "exportOrientation";
 
 namespace GLTF
 {

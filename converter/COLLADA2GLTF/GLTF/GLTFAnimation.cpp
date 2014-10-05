@@ -145,7 +145,8 @@ namespace GLTF
         float* positions = 0;
         float* scales = 0;
         
-        animationFlattener->allocAndFillAffineTransformsBuffers(&positions, &rotations, &scales, count);
+        bool exportOrientation = CONFIG_BOOL(asset, kExportOrientation);
+        animationFlattener->allocAndFillAffineTransformsBuffers(&positions, &rotations, &scales, exportOrientation, count);
         
         if (animationFlattener->hasAnimatedScale()) {
             //Scale
@@ -172,14 +173,14 @@ namespace GLTF
         }
         
         if (animationFlattener->hasAnimatedRotation()) {
-            //Rotation
+            std::string orientationOrRotation = exportOrientation ? kOrientation : kRotation;
             setupAndWriteAnimationParameter(this,
-                                            kRotation,
+                                            orientationOrRotation,
                                             "FLOAT_VEC4",
                                             (unsigned char*)rotations,
                                             count * sizeof(float) * 4, false,
                                             asset);
-            __AddChannel(this, targetID, kRotation);
+            __AddChannel(this, targetID, orientationOrRotation);
             free(rotations);
         }
     }

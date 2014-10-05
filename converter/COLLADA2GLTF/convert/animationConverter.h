@@ -169,7 +169,7 @@ namespace GLTF
             return this->_hasAnimatedRotation;
         }
         
-        void allocAndFillAffineTransformsBuffers(float **translationsPtr, float **rotationsPtr, float **scalePtr, size_t &count) {
+        void allocAndFillAffineTransformsBuffers(float **translationsPtr, float **rotationsPtr, float **scalePtr, bool exportOrientation, size_t &count) {
             
             COLLADABU::Math::Matrix4 transformationMatrix;
             float *translations = 0;
@@ -195,6 +195,7 @@ namespace GLTF
             
             float *previousAxisAngle = 0;
             float axisAngle[4];
+            float quaternion[4];
             for (size_t i = 0 ; i < _transforms.size() ; i++) {
                 std::shared_ptr<GLTFTransformKey> key = this->_transforms[i];
 
@@ -206,66 +207,93 @@ namespace GLTF
                 decomposeMatrix(transformationMatrix,
                                 (translations != 0) ? translations + (i * 3) : 0,
                                 (rotations != 0) ? axisAngle : 0,
-                                (scales != 0) ? scales + (i * 3) : 0);
+                                (scales != 0) ? scales + (i * 3) : 0,
+                                false);
                 
-                if ((i > 0) && (rotations != 0)) {
-                    //each quaternions have 2 possible representations from axis angle
-                    //we want to pick-up the closest one to the last orientation
-                    COLLADABU::Math::Vector3 axis(axisAngle[0], axisAngle[1], axisAngle[2]);
-                    COLLADABU::Math::Quaternion key1;
-                    COLLADABU::Math::Quaternion key2;
-                    
-                    key1.fromAngleAxis(axisAngle[3], axis);
-                    bool skip = false;
-                    if (0 == memcmp(axisAngle, previousAxisAngle, 4 * sizeof(float))) {
-                        skip = true;
-                    }
-                    
-                    key2.x = -key1.x;
-                    key2.y = -key1.y;
-                    key2.z = -key1.z;
-                    key2.w = -key1.w;
-                    
-                    key1.normalise();
-                    key2.normalise();
-                    
-                    COLLADABU::Math::Vector3 previousAxis(previousAxisAngle[0], previousAxisAngle[1], previousAxisAngle[2]);
-                    COLLADABU::Math::Quaternion previousKey;
-                    previousKey.fromAngleAxis(previousAxisAngle[3], previousAxis);
-                    previousKey.normalise();
-
-                    double angle1 = acos(previousKey.dot(key1));
-                    double angle2 = acos(previousKey.dot(key2));
-
-                    if (angle1 > COLLADABU::Math::HALF_PI)
-                        angle1 -= COLLADABU::Math::HALF_PI;
-                    if (angle2 > COLLADABU::Math::HALF_PI)
-                        angle2 -= COLLADABU::Math::HALF_PI;
-                  
-                    COLLADABU::Math::Vector3 destAxis1;
-                    COLLADABU::Math::Vector3 destAxis2;
-                    COLLADABU::Math::Real destAngle1;
-                    COLLADABU::Math::Real destAngle2;
-                    key1.toAngleAxis ( destAngle1, destAxis1 );
-                    key2.toAngleAxis ( destAngle2, destAxis2 );
-                    
-                    if ((skip == false) && (angle1 > angle2)) {
-                        axisAngle[0] = (float)destAxis2[0];
-						axisAngle[1] = (float)destAxis2[1];
-						axisAngle[2] = (float)destAxis2[2];
-						axisAngle[3] = (float)destAngle2;
-                    } else {
-						axisAngle[0] = (float)destAxis1[0];
-						axisAngle[1] = (float)destAxis1[1];
-						axisAngle[2] = (float)destAxis1[2];
-						axisAngle[3] = (float)destAngle1;
+                if (rotations != 0) {
+                    if  (i > 0) {
+                        //each quaternions have 2 possible representations from axis angle
+                        //we want to pick-up the closest one to the last orientation
+                        COLLADABU::Math::Vector3 axis(axisAngle[0], axisAngle[1], axisAngle[2]);
+                        COLLADABU::Math::Quaternion key1;
+                        COLLADABU::Math::Quaternion key2;
+                        
+                        key1.fromAngleAxis(axisAngle[3], axis);
+                        bool skip = false;
+                        if (0 == memcmp(axisAngle, previousAxisAngle, 4 * sizeof(float))) {
+                            skip = true;
+                        }
+                        
+                        key2.x = -key1.x;
+                        key2.y = -key1.y;
+                        key2.z = -key1.z;
+                        key2.w = -key1.w;
+                        
+                        key1.normalise();
+                        key2.normalise();
+                        
+                        COLLADABU::Math::Vector3 previousAxis(previousAxisAngle[0], previousAxisAngle[1], previousAxisAngle[2]);
+                        COLLADABU::Math::Quaternion previousKey;
+                        previousKey.fromAngleAxis(previousAxisAngle[3], previousAxis);
+                        previousKey.normalise();
+                        
+                        double angle1 = acos(previousKey.dot(key1));
+                        double angle2 = acos(previousKey.dot(key2));
+                        
+                        if (angle1 > COLLADABU::Math::HALF_PI)
+                            angle1 -= COLLADABU::Math::HALF_PI;
+                        if (angle2 > COLLADABU::Math::HALF_PI)
+                            angle2 -= COLLADABU::Math::HALF_PI;
+                        
+                        COLLADABU::Math::Vector3 destAxis1;
+                        COLLADABU::Math::Vector3 destAxis2;
+                        COLLADABU::Math::Real destAngle1;
+                        COLLADABU::Math::Real destAngle2;
+                        key1.toAngleAxis ( destAngle1, destAxis1 );
+                        key2.toAngleAxis ( destAngle2, destAxis2 );
+                        
+                        if ((skip == false) && (angle1 > angle2)) {
+                            if (exportOrientation) {
+                                quaternion[0] = (float)key2.x;
+                                quaternion[1] = (float)key2.y;
+                                quaternion[2] = (float)key2.z;
+                                quaternion[3] = (float)key2.w;
+                            } else {
+                                axisAngle[0] = (float)destAxis2[0];
+                                axisAngle[1] = (float)destAxis2[1];
+                                axisAngle[2] = (float)destAxis2[2];
+                                axisAngle[3] = (float)destAngle2;
+                            }
+                        } else {
+                            if (exportOrientation) {
+                                quaternion[0] = (float)key1.x;
+                                quaternion[1] = (float)key1.y;
+                                quaternion[2] = (float)key1.z;
+                                quaternion[3] = (float)key1.w;
+                            } else {
+                                axisAngle[0] = (float)destAxis1[0];
+                                axisAngle[1] = (float)destAxis1[1];
+                                axisAngle[2] = (float)destAxis1[2];
+                                axisAngle[3] = (float)destAngle1;
+                            }
+                        }
+                    } else if (exportOrientation) {
+                        //we want a single quaternion
+                        decomposeMatrix(transformationMatrix,
+                                        0,
+                                        quaternion,
+                                        0,
+                                        true);
                     }
                 }
                 
-                if (rotations != 0)
-                    memcpy(rotations + (i * 4), axisAngle, sizeof(float) * 4);
-
-                                
+                if (rotations != 0) {
+                    if (exportOrientation) {
+                        memcpy(rotations + (i * 4), quaternion, sizeof(float) * 4);
+                    } else {
+                        memcpy(rotations + (i * 4), axisAngle, sizeof(float) * 4);
+                    }
+                }
             }
         }
         

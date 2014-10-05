@@ -58,7 +58,7 @@ namespace GLTF
      * Author:	Spencer W. Thomas
      * 		University of Michigan
      */
-    static bool unmatrix(COLLADABU::Math::Matrix4 mat, double *tran)
+    static bool unmatrix(COLLADABU::Math::Matrix4 mat, double *tran, bool decomposeAsQuaternion)
     {
         int i, j;
         COLLADABU::Math::Matrix4 locmat;
@@ -145,22 +145,30 @@ namespace GLTF
         COLLADABU::Math::Matrix3 amat3( row[0][0], row[1][0], row[2][0],
                                        row[0][1], row[1][1], row[2][1],
                                        row[0][2], row[1][2], row[2][2]);
-        COLLADABU::Math::Real angle;
-        COLLADABU::Math::Vector3 axis;
         //COLLADABU::Math::Quaternion aquat = QuaternionFromMatrix(amat3);
         COLLADABU::Math::Quaternion aquat;
         aquat.fromRotationMatrix(amat3);
+        
         aquat.normalise();
-        aquat.toAngleAxis(angle, axis);
-        tran[U_ROTATEX] = axis.x;
-        tran[U_ROTATEY] = axis.y;
-        tran[U_ROTATEZ] = axis.z;
-        tran[U_ROTATEW] = angle;
+        if (decomposeAsQuaternion) {
+            tran[U_ROTATEX] = aquat.x;
+            tran[U_ROTATEY] = aquat.y;
+            tran[U_ROTATEZ] = aquat.z;
+            tran[U_ROTATEW] = aquat.w;
+        } else {
+            COLLADABU::Math::Real angle;
+            COLLADABU::Math::Vector3 axis;
+            aquat.toAngleAxis(angle, axis);
+            tran[U_ROTATEX] = axis.x;
+            tran[U_ROTATEY] = axis.y;
+            tran[U_ROTATEZ] = axis.z;
+            tran[U_ROTATEW] = angle;
+        }
         
         return true;
     }
     
-    void decomposeMatrix(COLLADABU::Math::Matrix4 &matrix, float *translation, float *rotation, float *scale) {
+    void decomposeMatrix(COLLADABU::Math::Matrix4 &matrix, float *translation, float *rotation, float *scale, bool decomposeAsQuaternion) {
         COLLADABU::Math::Matrix4 tr = matrix.transpose();
         tr.setElement(0,3, 0);
         tr.setElement(1,3, 0);
@@ -168,7 +176,7 @@ namespace GLTF
         tr.setElement(3,3, 1);
         double tran[20];
         
-        if (!unmatrix(tr, tran)) {
+        if (!unmatrix(tr, tran, decomposeAsQuaternion)) {
             printf("WARNING: matrix can't be decomposed \n");
         }
         

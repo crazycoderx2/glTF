@@ -38,7 +38,7 @@ namespace GLTF
     GLTFConfig::~GLTFConfig() {}
     
     void GLTFConfig::_setupDefaultConfigOptions(shared_ptr<JSONObject> optionsRoot) {
-        optionsRoot->setBool("premultipliedAlpha", true);
+        optionsRoot->setBool(kPremultipliedAlpha, true);
         optionsRoot->setBool("invertTransparency", false);
         optionsRoot->setBool("exportAnimations", true);
         optionsRoot->setBool("outputProgress", false);
@@ -62,7 +62,8 @@ namespace GLTF
         optionsRoot->setBool("outputConvertionMetaData", false);
         optionsRoot->setBool("verboseLogging", false);
 		optionsRoot->setBool("embedResources", false);
-        
+        optionsRoot->setBool("exportOrientation", false);
+
         //create the path "extensions.Open3DGC.quantization" and set default for Open3DGC
         shared_ptr<JSONObject> extensions(new JSONObject());
         shared_ptr<JSONObject> Open3DGC(new JSONObject());

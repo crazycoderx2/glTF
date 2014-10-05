@@ -52,9 +52,9 @@ using namespace std;
 
 #define STDOUT_OUTPUT 0
 #if USE_OPEN3DGC
-#define OPTIONS_COUNT 15
+#define OPTIONS_COUNT 16
 #else
-#define OPTIONS_COUNT 13
+#define OPTIONS_COUNT 14
 #endif
 
 
@@ -73,6 +73,7 @@ static const OptionDescriptor options[] = {
 	{ "o",				required_argument,  "-o -> path of output file argument [string]" },
 	{ "b",				required_argument,  "-b -> path of output bundle argument [string]" },
 	{ "a",              required_argument,  "-a -> export animations, argument [bool], default:true" },
+	{ "q",              no_argument,        "-q -> export orientation (quaternion in transform instead of axis angle)" },
 	{ "i",              no_argument,        "-i -> invert-transparency" },
 	{ "d",              no_argument,        "-d -> export pass details to be able to regenerate shaders and states" },
 	{ "p",              no_argument,        "-p -> output progress" },
@@ -151,7 +152,7 @@ static bool processArgs(int argc, char * const * argv, GLTF::GLTFAsset *asset) {
     
     shared_ptr<GLTF::GLTFConfig> converterConfig = asset->converterConfig();
     
-    while ((ch = getopt_long(argc, argv, "z:f:o:b:a:idpl:c:m:vhsre", opt_options, 0)) != -1) {
+    while ((ch = getopt_long(argc, argv, "z:f:o:b:a:qidpl:c:m:vhsre", opt_options, 0)) != -1) {
         switch (ch) {
             case 'z':
                 converterConfig->initWithPath(optarg);
@@ -176,6 +177,9 @@ static bool processArgs(int argc, char * const * argv, GLTF::GLTFAsset *asset) {
                 break;
             case 'p':
                 converterConfig->config()->setBool("outputProgress", true);
+                break;
+            case 'q':
+                converterConfig->config()->setBool(kExportOrientation, true);
                 break;
                 
             case 'c':

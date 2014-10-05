@@ -239,7 +239,7 @@ namespace GLTF
                                        COLLADABU::Math::Matrix4 parentMatrix,
                                        SceneFlatteningInfo* sceneFlatteningInfo) {
         GLTFAsset *asset = this->_asset.get();
-        bool shouldExportTRS = CONFIG_BOOL(asset, "alwaysExportTRS");
+        bool shouldExportTRS = 1 || CONFIG_BOOL(asset, "alwaysExportTRS");
         const NodePointerArray& nodes = node->getChildNodes();
         std::string nodeOriginalID = node->getOriginalId();
         if (nodeOriginalID.length() == 0) {
@@ -345,7 +345,9 @@ namespace GLTF
         const COLLADABU::Math::Matrix4 worldMatrix = parentMatrix * matrix;
                 
         if (shouldExportTRS) {
-            GLTF::decomposeMatrix(matrix, translation, rotation, scale);
+            bool exportOrientation = CONFIG_BOOL(asset, kExportOrientation);
+            
+            GLTF::decomposeMatrix(matrix, translation, rotation, scale, exportOrientation);
 
             // Scale distance units if we need to
             translation[0] *= (float)_asset->getDistanceScale();
@@ -359,7 +361,7 @@ namespace GLTF
                 nodeObject->setValue(kTranslation, serializeVec3(translation[0], translation[1], translation[2]));
             
             //hum what should be the identity for axis angle ? https://github.com/KhronosGroup/glTF/issues/197
-            nodeObject->setValue(kRotation, serializeVec4(rotation[0], rotation[1], rotation[2], rotation[3]));
+            nodeObject->setValue(exportOrientation ? kOrientation : kRotation, serializeVec4(rotation[0], rotation[1], rotation[2], rotation[3]));
 
             bool exportScale = !(!exportDefaultValues && ((scale[0] == 1) && (scale[1] == 1) && (scale[2] == 1)));
             if (exportScale)

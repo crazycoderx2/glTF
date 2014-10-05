@@ -27,7 +27,7 @@
 namespace GLTF
 {
     //FIXME: add these methods to OpenCOLLADA if needed.
-    void decomposeMatrix(COLLADABU::Math::Matrix4 &matrix, float *translation, float *rotation, float *scale);
+    void decomposeMatrix(COLLADABU::Math::Matrix4 &matrix, float *translation, float *rotation, float *scale,  bool decomposeAsQuaternion = false);
     void buildLookAtMatrix(COLLADAFW::Lookat *lookat, COLLADABU::Math::Matrix4& matrix);
 
     class BBOX
