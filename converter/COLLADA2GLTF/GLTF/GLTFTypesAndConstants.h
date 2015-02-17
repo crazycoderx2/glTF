@@ -94,6 +94,7 @@ const std::string kRotation = "rotation";
 const std::string kOrientation = "orientation";
 const std::string kScale = "scale";
 const std::string kTranslation = "translation";
+const std::string kAspectRatio = "aspectRatio";
 
 const std::string MODELVIEW = "MODELVIEW";
 const std::string MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE";

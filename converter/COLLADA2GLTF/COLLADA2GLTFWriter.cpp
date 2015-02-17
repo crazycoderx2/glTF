@@ -984,11 +984,11 @@ namespace GLTF
                         break;
                     case Camera::ASPECTRATIO_AND_X: //!< aspect ratio and xfov or xmag, respectively describe the camera
                         projectionObject->setDouble("xmag", camera->getXMag().getValue());
-                        projectionObject->setDouble("aspect_ratio", camera->getAspectRatio().getValue());
+                        projectionObject->setDouble(kAspectRatio, camera->getAspectRatio().getValue());
                         break;
                     case Camera::ASPECTRATIO_AND_Y: //!< aspect ratio and yfov or <mag, respectivelydescribe the camera
                         projectionObject->setDouble("ymag", camera->getYMag().getValue());
-                        projectionObject->setDouble("aspect_ratio", camera->getAspectRatio().getValue());
+                        projectionObject->setDouble(kAspectRatio, camera->getAspectRatio().getValue());
                         break;
                 }
                 
@@ -1014,11 +1014,11 @@ namespace GLTF
                         break;
                     case Camera::ASPECTRATIO_AND_X: //!< aspect ratio and xfov or xmag, respectively describe the camera
                         projectionObject->setDouble("xfov", camera->getXFov().getValue());
-                        projectionObject->setDouble("aspect_ratio", camera->getAspectRatio().getValue());
+                        projectionObject->setDouble(kAspectRatio, camera->getAspectRatio().getValue());
                         break;
                     case Camera::ASPECTRATIO_AND_Y: //!< aspect ratio and yfov or <mag, respectivelydescribe the camera
                         projectionObject->setDouble("yfov", camera->getYFov().getValue());
-                        projectionObject->setDouble("aspect_ratio", camera->getAspectRatio().getValue());
+                        projectionObject->setDouble(kAspectRatio, camera->getAspectRatio().getValue());
                         break;
                 }
                 
