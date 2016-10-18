@@ -39,7 +39,6 @@
 #define DUMP_O3DGC_OUTPUT 0
 
 using namespace o3dgc;
-using namespace rapidjson;
 #if __cplusplus <= 199711L
 using namespace std::tr1;
 #endif
@@ -266,7 +265,7 @@ namespace GLTF
         O3DGCSC3DMCPredictionMode jointPrediction = _predictionModeForString(config->stringForKeyPath("extensions.Open3DGC.quantization.JOINT"));
         
         GLTFOutputStream *outputStream = asset->createOutputStreamIfNeeded(kCompressionOutputStream).get();
-        size_t bufferOffset = outputStream->length();
+        int bufferOffset = (int)outputStream->length();
         
         O3DGCSC3DMCPredictionMode floatAttributePrediction = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
         
@@ -317,7 +316,7 @@ namespace GLTF
         ifs.SetCoordIndex((unsigned short * const ) allConcatenatedIndices);
         ifs.SetIndexBufferID(primitiveIDs);
         
-        size_t vertexCount = 0;
+        long vertexCount = 0;
         
         std::vector <GLTF::Semantic> semantics = mesh->allSemantics();
         for (unsigned int i = 0 ; i < semantics.size() ; i ++) {
@@ -327,8 +326,8 @@ namespace GLTF
             
             for (size_t j = 0 ; j < attributesCount ; j++) {
                 shared_ptr <GLTFAccessor> meshAttribute = mesh->getMeshAttribute(semantic, j);
-                vertexCount = meshAttribute->getCount();
-                size_t componentsPerElement = meshAttribute->componentsPerElement();
+                vertexCount = (long)meshAttribute->getCount();
+                long componentsPerElement = (long)meshAttribute->componentsPerElement();
                 char *buffer = (char*)meshAttribute->getBufferView()->getBufferDataByApplyingOffset();
                 switch (semantic) {
                     case POSITION:
@@ -406,7 +405,7 @@ namespace GLTF
         BinaryStream bstream(vertexCount * 8);
         SC3DMCEncoder <unsigned short> encoder;
         shared_ptr<JSONObject> compressedData(new JSONObject());
-        compressedData->setInt32("verticesCount", vertexCount);
+        compressedData->setInt32("verticesCount", (int)vertexCount);
         compressedData->setInt32("indicesCount", allIndicesCount);
         //Open3DGC binary is disabled
         params.SetStreamType(CONFIG_STRING(asset, "compressionMode") == "binary" ? O3DGC_STREAM_TYPE_BINARY : O3DGC_STREAM_TYPE_ASCII);
@@ -441,7 +440,7 @@ namespace GLTF
         }
     }
     
-    void encodeDynamicVector(float *buffer, const std::string &path, size_t componentsCount, size_t count, GLTFAsset* asset) {
+    void encodeDynamicVector(float *buffer, const std::string &path, long componentsCount, long count, GLTFAsset* asset) {
         GLTFOutputStream *outputStream = asset->createOutputStreamIfNeeded(kCompressionOutputStream).get();
         Real max[32];
         Real min[32];
@@ -533,34 +532,33 @@ namespace GLTF
                                                              const std::string& parameterSID,
                                                              const std::string& accessorUID,
                                                              const std::string& parameterType,
-                                                             unsigned char* buffer, size_t byteLength,
+                                                             unsigned char* buffer, int byteLength,
                                                              bool isInputParameter,
                                                              GLTFAsset *asset) {
         //setup
         shared_ptr <GLTFProfile> profile = asset->profile();
         shared_ptr <GLTF::JSONObject> accessors = asset->root()->createObjectIfNeeded(kAccessors);
-        shared_ptr<JSONObject> parameter(new JSONObject());
         unsigned int glType = profile->getGLenumForString(parameterType);
-        parameter->setUnsignedInt32("count", cvtAnimation->getCount());
-        parameter->setString(kType, profile->getTypeForGLType(glType));
-        parameter->setUnsignedInt32(kComponentType, profile->getGLComponentTypeForGLType(glType));
+        shared_ptr<GLTFAccessor> parameter(new GLTFAccessor(profile, "FLOAT", profile->getTypeForGLType(glType)));
+        parameter->setByteStride(profile->sizeOfGLType(glType));
+        parameter->setCount((int)cvtAnimation->getCount());
 
         accessors->setValue(accessorUID, parameter);
         cvtAnimation->parameters()->setString(parameterSID, accessorUID);
         
         //write
-        size_t byteOffset = 0;
+        int byteOffset = 0;
         bool shouldEncodeOpen3DGC = CONFIG_STRING(asset, "compressionType")  == "Open3DGC";
         GLTFOutputStream *outputStream = shouldEncodeOpen3DGC ? asset->createOutputStreamIfNeeded(kCompressionOutputStream).get() : asset->createOutputStreamIfNeeded(asset->getSharedBufferId()).get();;
-        byteOffset = outputStream->length();
+        byteOffset = (int)outputStream->length();
         parameter->setUnsignedInt32("byteOffset", byteOffset);
         
         if (shouldEncodeOpen3DGC) {
-            size_t componentsCount = profile->getComponentsCountForType(parameter->getString(kType));
+            long componentsCount = (long)profile->getComponentsCountForType(parameter->getString(kType));
             if (componentsCount) {
-                encodeDynamicVector((float*)buffer, parameterSID, componentsCount, cvtAnimation->getCount(), asset);
+                encodeDynamicVector((float*)buffer, parameterSID, componentsCount, (long)cvtAnimation->getCount(), asset);
                 
-                byteLength = outputStream->length() - byteOffset;
+                byteLength = (int)outputStream->length() - byteOffset;
                 
                 shared_ptr<JSONObject> extensionsObject = parameter->createObjectIfNeeded(kExtensions);
                 shared_ptr<JSONObject> compressionObject = extensionsObject->createObjectIfNeeded("Open3DGC-compression");
@@ -590,12 +588,13 @@ namespace GLTF
     void setupAndWriteAnimationParameter(GLTFAnimation *cvtAnimation,
                                          const std::string& parameterSID,
                                          const std::string& parameterType,
-                                         unsigned char* buffer, size_t byteLength,
+                                         unsigned char* buffer, int byteLength,
                                          bool isInputParameter,
                                          GLTFAsset *asset) {
         
         shared_ptr <JSONObject> parameter;
         shared_ptr <GLTF::JSONObject> accessors = asset->root()->createObjectIfNeeded(kAccessors);
+        std::string accessorUID = "";
         if (CONFIG_BOOL(asset, "shareAnimationAccessors")) {
             GLTFAccessorCache accessorCache(buffer, byteLength);
             UniqueIDToAccessor::iterator it = asset->_uniqueIDToAccessorObject.find(accessorCache);
@@ -604,17 +603,23 @@ namespace GLTF
                 parameter = accessors->getObject(it->second);
             } else {
                 //build an id based on number of accessors
-                std::string accessorUID = "animAccessor_" + GLTFUtils::toString(accessors->getKeysCount());
+                accessorUID = "animAccessor_" + GLTFUtils::toString(accessors->getKeysCount());
                 parameter = __WriteAnimationParameter(cvtAnimation, parameterSID, accessorUID, parameterType, buffer, byteLength, isInputParameter, asset);
                 asset->_uniqueIDToAccessorObject.insert(std::make_pair(accessorCache, accessorUID));
             }
         } else {
-            std::string accessorUID = "animAccessor_" + GLTFUtils::toString(accessors->getKeysCount());
+            accessorUID = "animAccessor_" + GLTFUtils::toString(accessors->getKeysCount());
             parameter = __WriteAnimationParameter(cvtAnimation, parameterSID, accessorUID, parameterType, buffer, byteLength, isInputParameter, asset);
-        }        
-        if (!isInputParameter)
+        }       
+
+        if (!isInputParameter) {
             __SetupSamplerForParameter(cvtAnimation, parameter, parameterSID);
-        
+        }
+
+        if (accessorUID != "") {
+            shared_ptr <GLTFAccessor> accessor = static_pointer_cast<GLTFAccessor>(accessors->getObject(accessorUID));
+            accessor->exposeMinMax(buffer);
+        }
     }
 }
 

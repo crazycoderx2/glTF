@@ -8,6 +8,7 @@
 #include "geometryHelpers.h"
 #include "../shaders/commonProfileShaders.h"
 #include <GLTFOpenCOLLADAUtils.h>
+#include <GLTFDefaultWriter.h>
 
 #if __cplusplus <= 199711L
 using namespace std::tr1;
@@ -62,24 +63,40 @@ namespace GLTF
         shared_ptr<GLTFAccessor> positionAttribute = mesh->getMeshAttribute(GLTF::POSITION, 0);
         size_t vertexCount = positionAttribute->getCount();
         unsigned int totalVerticesCount = asset->convertionResults()->getUnsignedInt32("verticesCount");
-		totalVerticesCount += (unsigned int)vertexCount;
+        totalVerticesCount += (unsigned int)vertexCount;
         asset->convertionResults()->setUnsignedInt32("verticesCount", totalVerticesCount);
 
-        for (unsigned int j = 0 ; j < allMeshAttributes->size() ; j++) {
-            shared_ptr <GLTFAccessor> meshAttribute = (*allMeshAttributes)[j];
-            shared_ptr <GLTFBufferView> bufferView = meshAttribute->getBufferView();
-            shared_ptr <GLTFBuffer> buffer = bufferView->getBuffer();
-            
-            if (!bufferView.get()) {
-                return false;
-            }
-            
-            if (IDToBuffer.count(bufferView->getBuffer()->getID()) == 0) {
-                meshAttribute->exposeMinMax();
-                meshAttribute->setByteOffset(vertexOutputStream->length() - startOffset);
-                vertexOutputStream->write(buffer);
-                IDToBuffer[bufferView->getBuffer()->getID()] = buffer;
-                asset->setGeometryByteLength(asset->getGeometryByteLength() + buffer->getByteLength());
+        GLTF::JSONValueVector primitives = mesh->getPrimitives()->values();
+        unsigned int primitivesCount = (unsigned int)primitives.size();
+        for (unsigned int j = 0; j < primitivesCount; j++) {
+            shared_ptr<GLTF::GLTFPrimitive> primitive = static_pointer_cast<GLTFPrimitive>(primitives[j]);
+            GLTF::VertexAttributeVector vertexAttributes = primitive->getVertexAttributes();
+            for (unsigned int k = 0; k < vertexAttributes.size(); k++) {
+                shared_ptr <JSONVertexAttribute> vertexAttribute = static_pointer_cast<JSONVertexAttribute>(vertexAttributes[k]);
+                GLTF::Semantic semantic = vertexAttribute->getSemantic();
+                shared_ptr <GLTF::GLTFAccessor> meshAttribute = mesh->getMeshAttribute(semantic, vertexAttribute->getIndexOfSet());
+                shared_ptr <GLTF::GLTFAccessor> indicesAccessor = primitive->getIndices();
+
+                if (meshAttribute != NULL) {
+                    shared_ptr <GLTFBufferView> bufferView = meshAttribute->getBufferView();
+                    shared_ptr <GLTFBuffer> buffer = bufferView->getBuffer();
+
+                    if (!bufferView.get()) {
+                        return false;
+                    }
+
+                    if (IDToBuffer.count(bufferView->getBuffer()->getID()) == 0) {
+                        meshAttribute->exposeMinMax();
+                        meshAttribute->setByteOffset(vertexOutputStream->length() - startOffset);
+                        vertexOutputStream->write(buffer);
+                        IDToBuffer[bufferView->getBuffer()->getID()] = buffer;
+                        asset->setGeometryByteLength(asset->getGeometryByteLength() + buffer->getByteLength());
+                    }
+                }
+                if (indicesAccessor != NULL) {
+                    indicesAccessor->setByteStride(2);
+                    indicesAccessor->exposeMinMax();
+                }
             }
         }
         return true;
@@ -89,7 +106,7 @@ namespace GLTF
         GLTFOutputStream* compressionOutputStream = asset->createOutputStreamIfNeeded(kCompressionOutputStream).get();
         
         shared_ptr <JSONObject> floatAttributeIndexMapping(new JSONObject());
-		unsigned compressedBufferStart = (unsigned int)compressionOutputStream->length();
+        unsigned compressedBufferStart = (unsigned int)compressionOutputStream->length();
         encodeOpen3DGCMesh(mesh, floatAttributeIndexMapping, asset);
         typedef std::map<std::string , shared_ptr<GLTF::GLTFBuffer> > IDToBufferDef;
         IDToBufferDef IDToBuffer;
@@ -113,12 +130,12 @@ namespace GLTF
                 asset->convertionResults()->setUnsignedInt32("trianglesCount", trianglesCount);
                 size_t indicesLength = sizeof(unsigned short) * indicesCount;
                 uniqueIndices->setByteOffset(compressedBufferStart);
-				compressedBufferStart += (unsigned int)indicesLength; //we simulate how will be the uncompressed data here, so this is the length in short *on purpose*
+                compressedBufferStart += (unsigned int)indicesLength; //we simulate how will be the uncompressed data here, so this is the length in short *on purpose*
             }
         }
         
         shared_ptr<GLTFAccessor> positionAttribute = mesh->getMeshAttribute(GLTF::POSITION, 0);
-		vertexCount = (unsigned int)positionAttribute->getCount();
+        vertexCount = (unsigned int)positionAttribute->getCount();
         unsigned int totalVerticesCount = asset->convertionResults()->getUnsignedInt32("verticesCount");
         totalVerticesCount += vertexCount;
         asset->convertionResults()->setUnsignedInt32("verticesCount", totalVerticesCount);
@@ -133,7 +150,7 @@ namespace GLTF
             if (!IDToBuffer[bufferView->getBuffer()->getID()].get()) {
                 meshAttribute->exposeMinMax();
                 meshAttribute->setByteOffset(compressedBufferStart);
-				compressedBufferStart += (unsigned int)buffer->getByteLength();
+                compressedBufferStart += (unsigned int)buffer->getByteLength();
                 IDToBuffer[bufferView->getBuffer()->getID()] = buffer;
             }
         }
@@ -199,20 +216,20 @@ namespace GLTF
     shared_ptr<GLTFOutputStream> GLTFAsset::createOutputStreamIfNeeded(const std::string& streamName) {
 
         if (this->_nameToOutputStream.count(streamName) == 0)
-		{
-			shared_ptr<GLTFOutputStream> outputStream;
+        {
+            shared_ptr<GLTFOutputStream> outputStream;
             if (CONFIG_BOOL(this, "embedResources"))
-			{
-				outputStream = std::make_shared<GLTFOutputStream>();
-			}
-			else
-			{
-				COLLADABU::URI outputURI(this->getOutputFilePath().c_str());
+            {
+                outputStream = std::make_shared<GLTFOutputStream>();
+            }
+            else
+            {
+                COLLADABU::URI outputURI(this->getOutputFilePath().c_str());
 
                 std::string folder = getPathDir(outputURI);
 
-				outputStream = std::make_shared<GLTFOutputStream>(folder, streamName, "");
-			}
+                outputStream = std::make_shared<GLTFOutputStream>(folder, streamName, "");
+            }
             this->_nameToOutputStream[streamName] = outputStream;
         }
         
@@ -225,7 +242,7 @@ namespace GLTF
             shared_ptr<GLTFOutputStream> outputStream = this->_nameToOutputStream[streamName];
             
             outputStream->close();
-			if (removeFile) {
+            if (removeFile) {
                 outputStream->remove();
             }
             
@@ -763,12 +780,12 @@ namespace GLTF
         if (materialBindings == nullptr)
             return false;
         
-        size_t jointsCount = 0;
+        int jointsCount = 0;
         if (node->contains(kSkin)) {
             std::string skinOriginalID = node->getString(kSkin);
             shared_ptr <JSONObject> skins = this->_root->createObjectIfNeeded(kSkins);
             shared_ptr <GLTFSkin> skin = static_pointer_cast<GLTFSkin>(skins->getObject(skinOriginalID) );
-            jointsCount = skin->getJointsCount();
+            jointsCount = (int)skin->getJointsCount();
         }
         shared_ptr <JSONArray> meshesArray = nullptr;
 
@@ -850,54 +867,31 @@ namespace GLTF
             shared_ptr<GLTF::JSONArray> extensionsUsed = this->_root->createArrayIfNeeded(kExtensionsUsed);
             extensionsUsed->appendValue(std::make_shared<JSONString>("KHR_materials_common"));
         }
-        
+
         shared_ptr<GLTFOutputStream> rawOutputStream = this->createOutputStreamIfNeeded(this->getSharedBufferId());
         shared_ptr<GLTFOutputStream> compressionOutputStream = this->createOutputStreamIfNeeded(kCompressionOutputStream);
 
         shared_ptr <GLTF::JSONObject> animations = this->_root->createObjectIfNeeded("animations");
         std::vector <std::string> animationsUIDs = animations->getAllKeys();
-        
-        for (size_t animationIndex = 0 ; animationIndex < animationsUIDs.size() ; animationIndex++) {
-            std::string inputParameterName = "TIME";
+
+        for (size_t animationIndex = 0; animationIndex < animationsUIDs.size(); animationIndex++) {
             shared_ptr<GLTFAnimation> animation = static_pointer_cast<GLTFAnimation>(animations->getObject(animationsUIDs[animationIndex]));
 
             // Can be null if there are no keyframes
-            if (animation)
-            {
-                shared_ptr<GLTFBufferView> timeBufferView = animation->getBufferViewForParameter(inputParameterName);
-
-                if (animation->parameters()->contains(inputParameterName) == false) {
-                    setupAndWriteAnimationParameter(animation.get(),
-                        inputParameterName,
-                        "FLOAT",
-                        (unsigned char*)timeBufferView->getBufferDataByApplyingOffset(),
-                        timeBufferView->getByteLength(), true,
-                        this);
-                }
-
-                std::vector<std::string> allTargets = animation->targets()->getAllKeys();
-                std::vector<GLTFAnimationFlattener*> flatteners;
-                for (size_t i = 0; i < allTargets.size(); i++) {
-                    std::string targetID = allTargets[i];
-                    shared_ptr<GLTFAnimationFlattener> animationFlattener = animation->animationFlattenerForTargetUID(targetID);
-                    if (std::find(flatteners.begin(), flatteners.end(), animationFlattener.get()) != flatteners.end()) {
-                        continue;
-                    }
-                    flatteners.push_back(animationFlattener.get());
-                    animation->writeAnimationForTargetID(targetID, this);
-                }
+            if (animation && animation->getTargetNodeId() != "") {
+                animation->writeAnimation(this);
                 animations->setValue(animation->getID(), animation);
             }
             animations->removeValue(animationsUIDs[animationIndex]);
         }
-        
+
         shared_ptr <GLTF::JSONObject> meshes = this->_root->createObjectIfNeeded(kMeshes);
         shared_ptr <GLTF::JSONObject> accessors = this->_root->createObjectIfNeeded(kAccessors);
-        
+
         std::vector <std::string> meshesUIDs = meshes->getAllKeys();
-        
+
         //here we will split meshes as needed or just pass through
-        for (size_t i = 0 ; i < meshesUIDs.size() ; i++) {
+        for (size_t i = 0; i < meshesUIDs.size(); i++) {
             const std::string &meshUID = meshesUIDs[i];
             shared_ptr<GLTFMesh> mesh = static_pointer_cast<GLTFMesh>(meshes->getObject(meshUID));
             if (mesh) {
@@ -908,7 +902,7 @@ namespace GLTF
                     JSONValueVectorRef meshesVector = targetMesh->subMeshes()->values();
                     size_t meshesCount = meshesVector.size();
                     if (meshesCount > 0) {
-                        for (size_t j = 0 ; j < meshesCount ; j++) {
+                        for (size_t j = 0; j < meshesCount; j++) {
                             mesh = static_pointer_cast<GLTFMesh>(meshesVector[j]);
                             meshes->setValue(mesh->getID(), mesh);
                         }
@@ -916,45 +910,91 @@ namespace GLTF
                 }
             }
         }
-        
+
         // ----
         shared_ptr <GLTF::JSONObject> skins = this->_root->createObjectIfNeeded(kSkins);
         std::vector <std::string> skinsUIDs = skins->getAllKeys();
-        for (size_t skinIndex = 0 ; skinIndex < skinsUIDs.size() ; skinIndex++) {
+        for (size_t skinIndex = 0; skinIndex < skinsUIDs.size(); skinIndex++) {
             shared_ptr <GLTFSkin> skin = static_pointer_cast<GLTFSkin>(skins->getObject(skinsUIDs[skinIndex]));
             skins->setValue(skin->getId(), skin);
             skins->removeValue(skinsUIDs[skinIndex]);
         }
         //we change the keys...
         skinsUIDs = skins->getAllKeys();
-        
+
         //Handle late binding of material in node
         //So we go through all nodes and if a mesh got different bindings than the ones needed we clone the "reference" mesh and assign the binding
         //we delay this operation to now, so that we get the reference mesh splitted.
         shared_ptr <GLTF::JSONObject> nodes = this->root()->createObjectIfNeeded(kNodes);
-        
+
+
         std::vector <std::string> nodesOriginalIds = nodes->getAllKeys();
-        for (size_t i = 0 ; i < nodesOriginalIds.size() ; i++) {
+        for (size_t i = 0; i < nodesOriginalIds.size(); i++) {
+            std::string nodeOID = nodesOriginalIds[i];
             std::string nodeUID = this->getUniqueId(nodesOriginalIds[i]);
-            this->_applyMaterialBindingsForNode(nodeUID);
+            if (nodeUID != "") {
+                shared_ptr <GLTF::JSONObject> node = nodes->getObject(nodeOID);
+                //WORK-AROUND: If camera is an empty string, it can be removed
+                //NOTE: This shouldn't happen, but it's here because one of the sample COLLADA models had this issue
+                if (node->contains(kCamera)) {
+                    std::string camera = node->getString(kCamera);
+                    if (camera.empty()) {
+                        node->removeValue(kCamera);
+                    }
+                }
+                this->_applyMaterialBindingsForNode(nodeUID);
+            }
         }
         
         meshesUIDs = meshes->getAllKeys();
+        shared_ptr <GLTF::JSONObject> materials = this->_root->createObjectIfNeeded(kMaterials);
         
         for (size_t i = 0 ; i < meshesUIDs.size() ; i++) {
             shared_ptr<GLTFMesh> mesh = static_pointer_cast<GLTFMesh>(meshes->getObject(meshesUIDs[i]));
-            mesh->resolveAttributes();
             GLTF::JSONValueVector primitives = mesh->getPrimitives()->values();
             unsigned int primitivesCount =  (unsigned int)primitives.size();
-            //WORK-AROUND: we don't want meshes without material, which can happen if a mesh is not associated with a node.
-            //In this case, the material binding - isn't resolved.
-            for (unsigned int k = 0 ; k < primitivesCount ; k++) {
-                shared_ptr<GLTFPrimitive> primitive = static_pointer_cast<GLTFPrimitive>(primitives[k]);
+
+            for (unsigned int j = 0 ; j < primitivesCount ; j++) {
+                shared_ptr<GLTFPrimitive> primitive = static_pointer_cast<GLTFPrimitive>(primitives[j]);
+                //WORK-AROUND: we don't want meshes without material, which can happen if a mesh is not associated with a node.
+                //In this case, the material binding - isn't resolved.
                 if (primitive->contains(kMaterial) ==  false) {
                     meshes->removeValue(mesh->getID());
                     break;
                 }
+                //WORK-AROUND: TEXCOORD from the Collada model can be removed if it isn't bound to a technique
+                else {
+                    std::string materialId = primitive->getMaterialID();
+                    shared_ptr <GLTF::GLTFEffect> material = static_pointer_cast<GLTF::GLTFEffect>(materials->getObject(materialId));
+                    shared_ptr <JSONObject> technique = material->getTechniqueGenerator();
+                    shared_ptr <JSONObject> texcoordBindings = technique->getObject("texcoordBindings");
+                    SemanticArrayPtr unboundTextures = material->getSemanticsForTexcoordName("");
+                    // If there are unbound textures in the model, it is impossible to determine which TEXCOORD semantics are unused
+                    if (unboundTextures == NULL || unboundTextures->size() == 0) {
+                        for (unsigned int k = 0; k < primitive->getVertexAttributes().size(); k++) {
+                            shared_ptr <JSONVertexAttribute> vertexAttribute = static_pointer_cast<JSONVertexAttribute>(primitive->getVertexAttributes()[k]);
+                            if (vertexAttribute->getSemantic() == GLTF::TEXCOORD) {
+                                std::string attribute = "TEXCOORD_" + std::to_string(vertexAttribute->getIndexOfSet());
+                                bool bound = false;
+                                for (unsigned int m = 0; m < texcoordBindings->getKeysCount(); m++) {
+                                    std::string key = texcoordBindings->getAllKeys()[m];
+                                    std::string binding = texcoordBindings->getString(key);
+
+                                    if (attribute == binding) {
+                                        bound = true;
+                                        break;
+                                    }
+                                }
+                                if (!bound) {
+                                    primitive->removeVertexAttribute(k);
+                                    k--;
+                                }
+                            }
+                        }
+                    }
+                }
             }
+            mesh->resolveAttributes();
         }
         
         //Meshes may have changed ids here, get keys again.
@@ -962,7 +1002,6 @@ namespace GLTF
 
         // ----
         
-        shared_ptr <GLTF::JSONObject> materials = this->_root->createObjectIfNeeded(kMaterials);
         vector <std::string> materialUIDs = materials->getAllKeys();
         for (size_t i = 0 ; i < materialUIDs.size() ; i++) {
             shared_ptr <GLTF::GLTFEffect> material = static_pointer_cast<GLTFEffect>(materials->getObject(materialUIDs[i]));
@@ -1041,30 +1080,32 @@ namespace GLTF
                 isCompressed = mesh->getExtensions()->contains("Open3DGC-compression");
             }
             
-            //serialize attributes
-            vector <GLTF::Semantic> allSemantics = mesh->allSemantics();
-            for (size_t k = 0 ; k < allSemantics.size() ; k++) {
-                GLTF::Semantic semantic = allSemantics[k];
-                size_t attributesCount = mesh->getMeshAttributesCountForSemantic(semantic);
-                
-                for (size_t j = 0 ; j < attributesCount ; j++) {
-                    shared_ptr <GLTF::GLTFAccessor> meshAttribute = mesh->getMeshAttribute(semantic, j);
-                    
-                    meshAttribute->setBufferView(isCompressed ? compressionBufferView : verticesBufferView);
-                    accessors->setValue(meshAttribute->getID(), meshAttribute);
-                }
-            }
-            
-            //serialize indices
+            //serialize indices and attributes
             unsigned int primitivesCount =  (unsigned int)primitives.size();
-            for (size_t k = 0 ; k < primitivesCount ; k++) {
-                shared_ptr<GLTF::GLTFPrimitive> primitive = static_pointer_cast<GLTFPrimitive>(primitives[k]);
+            for (size_t j = 0 ; j < primitivesCount ; j++) {
+                shared_ptr<GLTF::GLTFPrimitive> primitive = static_pointer_cast<GLTFPrimitive>(primitives[j]);
                 shared_ptr <GLTF::GLTFAccessor> uniqueIndices =  primitive->getIndices();
                 
                 GLTFBufferView *bufferView = isCompressed ? (GLTFBufferView*)compressionBufferView.get() : (GLTFBufferView*)indicesBufferView.get();
                 
                 uniqueIndices->setString(kBufferView, bufferView->getID());
                 accessors->setValue(uniqueIndices->getID(), uniqueIndices);
+
+                GLTF::VertexAttributeVector vertexAttributes = primitive->getVertexAttributes();
+                for (unsigned int k = 0; k < vertexAttributes.size(); k++) {
+                    shared_ptr <JSONVertexAttribute> vertexAttribute = static_pointer_cast<JSONVertexAttribute>(vertexAttributes[k]);
+                    GLTF::Semantic semantic = vertexAttribute->getSemantic();
+                    shared_ptr <GLTF::GLTFAccessor> meshAttribute = mesh->getMeshAttribute(semantic, vertexAttribute->getIndexOfSet());
+
+                    if (meshAttribute != NULL) {
+                        meshAttribute->setBufferView(isCompressed ? compressionBufferView : verticesBufferView);
+                        accessors->setValue(meshAttribute->getID(), meshAttribute);
+                    }
+                    if (uniqueIndices != NULL) {
+                        uniqueIndices->setByteStride(2);
+                        uniqueIndices->exposeMinMax();
+                    }
+                }
             }
             
             //set the compression buffer view
@@ -1105,15 +1146,6 @@ namespace GLTF
             shared_ptr<GLTFAnimation> animation = static_pointer_cast<GLTFAnimation>(animations->getObject(animationsUIDs[animationIndex]));
             shared_ptr<JSONObject> parameters = animation->parameters();
             
-            //Replace OpenCOLLADA uniqueID by Original IDs
-            shared_ptr <JSONArray> channels = animation->channels();
-            for (size_t i = 0 ; i < channels->values().size() ; i++) {
-                shared_ptr<JSONObject> channel = static_pointer_cast<JSONObject>(channels->values()[i]);
-                shared_ptr<JSONObject> target = channel->getObject(kTarget);
-                std::string originalID = this->_uniqueIDToOriginalID[target->getString("id")];
-                target->setString("id", originalID);
-            }
-            
             std::vector <std::string> parameterKeys = parameters->getAllKeys();
             for (size_t i = 0 ; i <parameterKeys.size() ; i++) {
                 std::string parameterUID = parameters->getString(parameterKeys[i]);
@@ -1125,9 +1157,8 @@ namespace GLTF
                 parameterObject->setString(kBufferView, genericBufferView->getID());
             }            
         }
-        
+
         shared_ptr <JSONObject> buffersObject(new JSONObject());
-        
         this->_root->setValue("buffers", buffersObject);
         
         if (sharedBuffer->getByteLength() > 0) {
@@ -1180,11 +1211,11 @@ namespace GLTF
             this->closeOutputStream(kCompressionOutputStream, true);
         }
         
-		if (sharedBuffer->getByteLength() == 0)
+        if (sharedBuffer->getByteLength() == 0)
             rawOutputStream->remove();
                 
-		this->convertionResults()->setUnsignedInt32(kGeometry, (unsigned int)this->getGeometryByteLength());
-		this->convertionResults()->setUnsignedInt32(kAnimation, (unsigned int)this->getAnimationByteLength());
+        this->convertionResults()->setUnsignedInt32(kGeometry, (unsigned int)this->getGeometryByteLength());
+        this->convertionResults()->setUnsignedInt32(kAnimation, (unsigned int)this->getAnimationByteLength());
         this->convertionResults()->setUnsignedInt32(kScene, (int) (verticesLength + indicesLength + animationLength + compressionLength) );
         
         this->log("[geometry] %d bytes\n", (int)this->getGeometryByteLength());

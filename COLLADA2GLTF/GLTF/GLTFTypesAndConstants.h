@@ -29,7 +29,7 @@
 
 #define EXPORT_MATERIALS_AS_EFFECTS 1
 
-const std::string glTFVersion = "1.0";
+const std::string glTFVersion = "1.0.1";
 
 const std::string kCount = "count";
 const std::string kByteOffset = "byteOffset";
@@ -88,6 +88,7 @@ const std::string kSemantic = "semantic";
 const std::string kJointName = "jointName";
 const std::string kJointNames = "jointNames";
 const std::string kDoubleSided = "doubleSided";
+const std::string kAspectRatio = "aspectRatio";
 
 const std::string MODELVIEW = "MODELVIEW";
 const std::string MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE";

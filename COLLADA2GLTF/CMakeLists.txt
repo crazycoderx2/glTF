@@ -80,6 +80,7 @@ link_directories(${COLLADA2GLTF_BINARY_DIR}/lib)
 
 if (WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
     add_definitions(-DWIN32)
     add_definitions(-EHsc)
 endif()
@@ -109,6 +110,7 @@ set(GLTF_SOURCES
     GLTF/GLTFPrimitive.cpp
     GLTF/GLTFUtils.cpp
     GLTF/GLTFWriter.cpp
+    GLTF/GLTFDefaultWriter.cpp
     GLTF/GLTFSkin.cpp
     GLTF/GLTF.h
     GLTF/GLTFTypesAndConstants.h
@@ -122,6 +124,7 @@ set(GLTF_SOURCES
     GLTF/GLTFPrimitive.h
     GLTF/GLTFUtils.h
     GLTF/GLTFWriter.h
+    GLTF/GLTFDefaultWriter.h
     GLTF/GLTFSkin.h
     GLTF/GLTFExtraDataHandler.h
     GLTF/GLTFExtraDataHandler.cpp
@@ -152,8 +155,6 @@ set(GLTF_SOURCES
 
     convert/meshConverter.cpp
     convert/meshConverter.h
-    convert/animationConverter.cpp
-    convert/animationConverter.h
 
     JSON/JSONArray.cpp
     JSON/JSONNumber.cpp

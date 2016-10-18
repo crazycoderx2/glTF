@@ -41,6 +41,7 @@
 #include "assert.h"
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 #if (defined(WIN32) || defined(_LIBCPP_VERSION) || __cplusplus > 199711L)
 #include <memory>
@@ -49,10 +50,6 @@
 #include <tr1/memory>
 #include <tr1/unordered_map>
 #endif
-
-// RapidJSON headers
-#include "prettywriter.h"	
-#include "filestream.h"
 
 // GLTF headers
 #include "COLLADA2GLTFExport.h"

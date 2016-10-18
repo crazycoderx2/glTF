@@ -367,6 +367,7 @@ namespace GLTF
         shared_ptr <JSONObject> functions(new GLTF::JSONObject());
         shared_ptr <JSONObject> states(new GLTF::JSONObject());
         shared_ptr <JSONArray> enableArray(new GLTF::JSONArray());
+		shared_ptr <JSONArray> depthMasks(new GLTF::JSONArray);
         shared_ptr <GLTFProfile> profile = asset->profile();
         
         enableArray->appendValue(shared_ptr<JSONNumber> (new JSONNumber(profile->getGLenumForString("DEPTH_TEST"))));
@@ -392,8 +393,9 @@ namespace GLTF
                 blendFuncSeparate->appendValue(shared_ptr<JSONNumber> (new JSONNumber(profile->getGLenumForString("SRC_ALPHA"))));
                 blendFuncSeparate->appendValue(shared_ptr<JSONNumber> (new JSONNumber(profile->getGLenumForString("ONE_MINUS_SRC_ALPHA"))));
             }
-            functions->setValue("blendFuncSeparate", blendFuncSeparate) ;
-            functions->setBool("depthMask", false);
+            functions->setValue("blendFuncSeparate", blendFuncSeparate);
+			depthMasks->appendValue(shared_ptr<JSONNumber>(new JSONNumber(false)));
+			functions->setValue("depthMask", depthMasks);
         }
         else
         {
@@ -611,7 +613,7 @@ namespace GLTF
         bool addSemantic(std::string vertexOrFragment, std::string uniformOrAttribute,
                          std::string semantic,
                          std::string parameterID,
-                         size_t count,
+                         int count,
                          bool includesVarying,
                          bool forcesAsAnArray = false) {
             

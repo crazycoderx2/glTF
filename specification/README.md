@@ -2,13 +2,11 @@
 <img src="figures/gltf.png" />
 </p>
 
-*Draft, Version 1.0*
+*Version 1.0*
 
 The GL Transmission Format (glTF) is a runtime asset delivery format for GL APIs: WebGL, OpenGL ES, and OpenGL.  glTF bridges the gap between 3D content creation tools and modern GL applications by providing an efficient, extensible, interoperable format for the transmission and loading of 3D content.
 
-
-> 
-_This is a draft specification; there may be minor changes before ratification is finalized.  Please provide feedback by submitting [issues](https://github.com/KhronosGroup/glTF/issues)._
+Last Updated: June 2, 2016
 
 Editors
 
@@ -22,6 +20,8 @@ Contributors
 * Uli Klumpp, Individual Contributor
 * Neil Trevett, NVIDIA
 
+Copyright (C) 2013-2016 The Khronos Group Inc. All Rights Reserved. glTF is a trademark of The Khronos Group Inc.
+
 # Contents
 
 * [Introduction](#introduction)
@@ -32,16 +32,17 @@ Contributors
 * [Concepts](#concepts)
   * [IDs and Names](#ids-and-names)
   * [Scenes](#scenes)
-  * [Accessing Binary Data](#binary-data)
+  * [Accessing Binary Data](#accessing-binary-data)
   * [Geometry and Meshes](#geometry-and-meshes)
   * [Materials and Shading](#materials-and-shading)
   * [Cameras](#cameras)
-  * [Lights](#lights)
   * [Animations](#animations)
   * [Metadata](#metadata)
   * [Specifying Extensions](#specifying-extensions)
 * [Properties Reference](#properties)
 * [Acknowledgements](#acknowledgements)
+* [Appendix A: Default Material](#appendix-a)
+* [Appendix B: Full Khronos Trademark Statement](#appendix-b)
 
 <a name="introduction"></a>
 # Introduction
@@ -107,11 +108,13 @@ Version 1.0 of glTF does not define compression for geometry and other rich data
 * `*.gltf` files use `model/gltf+json`
 * `*.bin` files use `application/octet-stream`
 * `*.glsl` files use `text/plain`
-* Texture files use the official `image/*` type based on the specific image format. For compatibility with modern web browsers, the following image formats are supported: .jpg, .png, .bmp, and .gif. 
+* Texture files use the official `image/*` type based on the specific image format. For compatibility with modern web browsers, the following image formats are supported: .jpg, .png, .bmp, and .gif.
 
 ## URIs
 
-glTF uses URIs to reference buffers, shaders, and image resources. These URIs may point to external files or be data URIs that embed resources in the JSON. This allows the application to decide the best approach for delivery: if different assets share many of the same geometries, animations, textures, or shaders, separate files may be preferred to reduce the total amount of data requested. With separate files, applications can progressively load data and do not need to load data for parts of a model that are not visible. If an application cares more about single-file deployment, embedding data may be preferred even though it increases the overall size due to base64 encoding and does not support progressive or on-demand loading.
+glTF uses URIs to reference buffers, shaders, and image resources. These URIs may point to external files or be data URIs that embed resources in the JSON. Embedded resources are base64 encoded using [RFC-4648](https://tools.ietf.org/html/rfc4648) so they can easily be decoded with JavaScript's `atob`.
+
+This allows the application to decide the best approach for delivery: if different assets share many of the same geometries, animations, textures, or shaders, separate files may be preferred to reduce the total amount of data requested. With separate files, applications can progressively load data and do not need to load data for parts of a model that are not visible. If an application cares more about single-file deployment, embedding data may be preferred even though it increases the overall size due to base64 encoding and does not support progressive or on-demand loading.
 
 <a name="concepts"></a>
 # Concepts
@@ -149,7 +152,7 @@ _IDs_ are internal string identifiers used to reference parts of a glTF asset, e
 
 In this example, `"a-buffer-id"` and `"a-bufferView-id"` are IDs.  The bufferView refers to the buffer using the buffer's ID: `"buffer": "a-buffer-id"`.
 
-IDs for top-level glTF dictionary objects (`accessors`, `animations`, `buffers`, `bufferViews`, `cameras`, `images`, `materials`, `meshes`, `nodes`, `programs`, `samplers`, `scenes`, `shaders`, `skins`, `techniques`, and `textures`) are in the same namespace and are unique. 
+IDs for top-level glTF dictionary objects (`accessors`, `animations`, `buffers`, `bufferViews`, `cameras`, `images`, `materials`, `meshes`, `nodes`, `programs`, `samplers`, `scenes`, `shaders`, `skins`, `techniques`, and `textures`) are in the same namespace and are unique.
 
 For example, the following is **not** allowed:
 
@@ -198,7 +201,7 @@ It is recommended that container formats reference a glTF object by ID by concat
 <a name="scenes"></a>
 ## Scenes
 
-The glTF asset contains one or more *scenes*, the set of visual objects to render. Scenes are defined in a dictionary object `scenes`. An additional property, `scene` (note singular), identifies which of the scenes in the dictionary is to be displayed at load time. 
+The glTF asset contains one or more *scenes*, the set of visual objects to render. Scenes are defined in a dictionary object `scenes`. An additional property, `scene` (note singular), identifies which of the scenes in the dictionary is to be displayed at load time.
 
 The following example defines a glTF asset with a single scene, `defaultScene`, that contains a single node, `node_1`.
 
@@ -215,7 +218,7 @@ The following example defines a glTF asset with a single scene, `defaultScene`, 
 
 ### Nodes and Hierarchy
 
-The glTF asset defines one or more *nodes*, that is, the objects comprising the scene to render. 
+The glTF asset defines one or more *nodes*, that is, the objects comprising the scene to render.
 
 Each node can contain one or more meshes, a skin instance, a joint name, or a camera, defined in the `meshes`, `skeletons`, `skin`, `jointName`, and `camera` properties, respectively.
 
@@ -223,7 +226,7 @@ Nodes have an optional `name` property.
 
 Nodes also have transform properties, as described in the next section.
 
-Nodes are organized in a parent-child hierarchy known informally as the *node hierarchy*. 
+Nodes are organized in a parent-child hierarchy known informally as the *node hierarchy*.
 
 The node hierarchy is defined using a node's `children` property, as in the following example:
 
@@ -258,8 +261,8 @@ In the example below, `node-box` defines non-default rotation and translation.
         "rotation": [
             0,
             0,
-            1,
-            0
+            0,
+            1
         ],
         "scale": [
             1,
@@ -316,7 +319,7 @@ All angles are in radians.
 
 ### Buffers and Buffer Views
 
-A *buffer* is data stored as a binary blob. The buffer can contain a combination of geometry, animation, and skins. 
+A *buffer* is data stored as a binary blob. The buffer can contain a combination of geometry, animation, and skins.
 
 Binary blobs allow efficient creation of GL buffers and
 textures since they require no additional parsing, except perhaps decompression. An asset can have any number of buffer files for flexibility for a wide array of applications.
@@ -325,7 +328,7 @@ Buffer data is little endian.
 
 All buffers are stored in the asset's `buffers` dictionary property.
 
-The following example defines a buffer. The `byteLength` property specifies the size of the buffer file. The `type` property specifies how the data is stored, either as a binary array buffer or text. The `uri` property is the URI to the buffer data. Buffer data may also be stored within the glTF file as base64-encoded data and reference via data URI. 
+The following example defines a buffer. The `byteLength` property specifies the size of the buffer file. The `type` property specifies how the data is stored, either as a binary array buffer or text. The `uri` property is the URI to the buffer data. Buffer data may also be stored within the glTF file as base64-encoded data and reference via data URI.
 
 ```javascript
     "buffers": {
@@ -424,7 +427,7 @@ The following tables can be used to compute the size of an accessor's attribute 
 | `"MAT3"` | 9 |
 | `"MAT4"` | 16 |
 
-The size of an accessor's attribute type, in bytes, is 
+The size of an accessor's attribute type, in bytes, is
 `(size in bytes of the 'componentType') * (number of components defined by 'type')`.
 
 For example:
@@ -491,23 +494,23 @@ The following example defines a mesh containing one triangle set primitive:
             },
             "indices": "accessor_21",
             "material": "blinn3-fx",
-            "primitive": 4
+            "mode": 4
         }
     ]
 ```
 
 Each attribute is defined as a property of the `attributes` object. The name of the property corresponds to an enumerated value identifying the vertex attribute, such as `POSITION`. This value will be mapped to a specific named attribute within the GLSL shader for the mesh, as defined in the material technique's `parameters` dictionary property (see Materials and Shading, below). The value of the property is the ID  of an accessor that contains the data.
 
-Valid attribute semantics include `POSITION`, `NORMAL`, `TEXCOORD`, `COLOR`, `JOINT`, `JOINTMATRIX`, and `WEIGHT`.  Attribute semantics can be of the form `[semantic]_[set_index]`, e.g., `TEXCOORD_0`, `TEXCOORD_1`, etc.
+Valid attribute semantic property names include `POSITION`, `NORMAL`, `TEXCOORD`, `COLOR`, `JOINT`, and `WEIGHT`.  Attribute semantic property names can be of the form `[semantic]_[set_index]`, e.g., `TEXCOORD_0`, `TEXCOORD_1`, etc.
 
 > **Implementation note:** Each primitive corresponds to one WebGL draw call (engines are, of course, free to batch draw calls). When a primitive's `indices` property is defined, it references the accessor to use for index data, and GL's `drawElements` function should be used. When the `indices` property is not defined, GL's `drawArrays` function should be used with a count equal to the count property of any of the accessors referenced by the `attributes` property (they are all equal for a given primitive).
 
-                    
-                    
+
+
 ### Skins
 
-All skins are stored in the `skins` dictionary property of the asset, by name. Each skin is defined by a `bindShapeMatrix` property, which describes how to pose the skin's geometry for use with the joints; the `inverseBindMatrices` property, used to bring coordinates being skinned into the same space as each joint; and a `jointNames` array property that lists the joints used to animate the skin. Each joint name must correspond to the joint of a node in the hierarchy, as designated by the node's `jointName` property.
-  
+All skins are stored in the `skins` dictionary property of the asset, by name. Each skin is defined by a `bindShapeMatrix` property, which describes how to pose the skin's geometry for use with the joints; the `inverseBindMatrices` property, used to bring coordinates being skinned into the same space as each joint; and a `jointNames` array property that lists the joints used to animate the skin. The order of joints is defined in the `skin.jointNames` array and it must match the order of `inverseBindMatrices` data. Each joint name must correspond to the joint of a node in the hierarchy, as designated by the node's `jointName` property.
+
 
 ```javascript
     "skins": {
@@ -557,7 +560,7 @@ A skin is instanced within a node using a combination of the node's `meshes`, `s
 
 #### Skinned Mesh Attributes
 
-The mesh for a skin is defined with vertex attributes that are used in skinning calculations in the vertex shader. The following mesh skin defines `JOINT` and `WEIGHT` vertex attributes for a triangle mesh primitive:
+The mesh for a skin is defined with vertex attributes that are used in skinning calculations in the vertex shader. The `JOINT` attribute data contains the indices of the joints from corresponding `jointNames` array that should affect the vertex. The `WEIGHT` attribute data defines the weights indicating how strongly the joint should influence the vertex. The following mesh skin defines `JOINT` and `WEIGHT` vertex attributes for a triangle mesh primitive:
 
 ```javascript
     "meshes": {
@@ -574,12 +577,14 @@ The mesh for a skin is defined with vertex attributes that are used in skinning 
                     },
                     "indices": "accessor_161",
                     "material": "material_1",
-                    "primitive": 4
+                    "mode": 4
                 }
             ]
         }
     },
 ```
+
+> **Implementation note:** The number of joints that influence one vertex is usually limited to 4, so that the joint indices and weights can be stored in __vec4__ elements.
 
 
 #### Joint Hierarchy
@@ -634,6 +639,8 @@ The joint hierarchy used in animation is simply the glTF node hierarchy, with ea
         },
 ```
 
+For more details of vertex skinning, refer to [glTF Overview](figures/gltfOverview-0.2.0.png).
+
 
 <a name="materials-and-shading"></a>
 ## Materials and Shading
@@ -650,7 +657,7 @@ Materials are stored in the assets `materials` dictionary property, which contai
             "ambient": [
                 0,
                 0,
-                0,	
+                0,
                 1
             ],
             "diffuse": "texture_file2",
@@ -673,7 +680,7 @@ Materials are stored in the assets `materials` dictionary property, which contai
 },
 ```
 
-The `technique` property is optional; if it is not supplied, and no extension is present that defines material properties, then the object will be rendered using a default material with 50% gray emissive color.
+The `technique` property is optional; if it is not supplied, and no extension is present that defines material properties, then the object will be rendered using a default material with 50% gray emissive color.  See [Appendix A](#appendix-a).
 
 **non-normative**: In practice, most assets will have a `technique` property or an extension that defines material properties.  The default material simply allows an asset to not have to define an explicit technique when an extension is used.
 
@@ -735,23 +742,23 @@ The following example shows a technique and the properties it defines. This sect
 		        2929
 		    ]
 		}
-        
+
 ```
 
 #### Parameters
 
-Each technique has zero or more parameters; each parameter is defined by a type (GL types such as a floating point number, vector, texture, etc.), a default value, and potentially a semantic describing how the runtime is to interpret the data to pass to the shader. When a material instances a technique, the name of each supplied value in its `values` property corresponds to one of the parameters defined in the technique. 
+Each technique has zero or more parameters; each parameter is defined by a type (GL types such as a floating point number, vector, texture, etc.), a default value, and potentially a semantic describing how the runtime is to interpret the data to pass to the shader. When a material instances a technique, the name of each supplied value in its `values` property corresponds to one of the parameters defined in the technique.
 
-The above example illustrates several parameters. The property `ambient` is defined as a `FLOAT_VEC4` type; `diffuse` is defined as a `SAMPLER_2D`; and `light0color` is defined as a `FLOAT_VEC3` with a default color value of white. 
+The above example illustrates several parameters. The property `ambient` is defined as a `FLOAT_VEC4` type; `diffuse` is defined as a `SAMPLER_2D`; and `light0color` is defined as a `FLOAT_VEC3` with a default color value of white.
 
 
 #### Semantics
 
-Technique parameters may also optionally define a *semantic*, an enumerated value describing how the runtime is to interpret the data to be passed to the shader. 
+Technique parameters may also optionally define a *semantic*, an enumerated value describing how the runtime is to interpret the data to be passed to the shader.
 
 In the above example, the parameter `light0Transform` defines the `MODELVIEW` semantic, which corresponds to the world space position of the node referenced in the property `node`, in this case the node `directionalight1`, which refers to a node that contains a light source.
 
-If no `node` property is supplied for a semantic, the semantic is implied in a context-specific manner: either to the node which is being rendered, or in the case of camera-specific semantics, to the current camera. In the following fragment, which defines a parameter named `projectionMatrix` that is derived from the implementation's projection matrix, the semantic would be applied to the camera. 
+If no `node` property is supplied for a semantic, the semantic is implied in a context-specific manner: either to the node which is being rendered, or in the case of camera-specific semantics, to the current camera. In the following fragment, which defines a parameter named `projectionMatrix` that is derived from the implementation's projection matrix, the semantic would be applied to the camera.
 
 ```javascript
 "projectionMatrix": {
@@ -778,7 +785,7 @@ Table 1. Uniform Semantics
 | `MODELINVERSETRANSPOSE`      | `FLOAT_MAT3` | The inverse-transpose of `MODEL` without the translation.  This translates normals in model coordinates to world coordinates. |
 | `MODELVIEWINVERSETRANSPOSE`  | `FLOAT_MAT3` | The inverse-transpose of `MODELVIEW` without the translation.  This translates normals in model coordinates to eye coordinates. |
 | `VIEWPORT`                   | `FLOAT_VEC4` | The viewport's x, y, width, and height properties stored in the `x`, `y`, `z`, and `w` components, respectively.  For example, this is used to scale window coordinates to [0, 1]: `vec2 v = gl_FragCoord.xy / viewport.zw;` |
-
+| `JOINTMATRIX`                | `FLOAT_MAT4` | Transforms mesh coordinates for a particular joint for skinning and animation. |
 
 #### Program Instances
 
@@ -843,19 +850,19 @@ The following example `states` object indicates to enable all Boolean states (se
       ],
       "blendFuncSeparate": [
           1,     // ONE (srcRGB)
-          1,     // ONE (srcAlpha)
           0,     // ZERO (dstRGB)
+          1,     // ONE (srcAlpha)
           0      // ZERO (dstAlpha)
       ],
       "colorMask": [true, true, true, true], // (red, green, blue, alpha)
       "cullFace": [1029], // BACK
-      "depthFunc": [LESS], // 513
+      "depthFunc": [513], // LESS
       "depthMask": [true],
       "depthRange": [0.0, 1.0], // (zNear, zFar)
       "frontFace": [2305], // CCW
       "lineWidth": [1.0],
       "polygonOffset": [0.0, 0.0], // (factor, units)
-      "scissor": [0, 0, 0, 0], // (x, y, width, height)
+      "scissor": [0, 0, 0, 0]  // (x, y, width, height)
     }
 }
 ```
@@ -877,7 +884,7 @@ The following example shows a typical `"states"` object for closed opaque geomet
 
 GLSL shader programs are stored in the asset's `programs` property. This property contains one or more objects, one for each program.
 
-Each shader program includes an `attributes` property, which specifies the vertex attributes that will be passed to the shader, and the properties `fragmentShader` and `vertexShader`, which reference the files for the fragment and vertex shader GLSL source code, respectively. 
+Each shader program includes an `attributes` property, which specifies the vertex attributes that will be passed to the shader, and the properties `fragmentShader` and `vertexShader`, which reference the files for the fragment and vertex shader GLSL source code, respectively.
 
 ```javascript
     "programs": {
@@ -943,7 +950,7 @@ All textures are stored in the asset's `textures` dictionary property. A texture
 ```
 
 #### Images
- 
+
 Images referred to by textures are stored in the `images` dictionary property of the asset. Each image contains a URI to an external file in one of the supported images formats. Image data may also be stored within the glTF file as base64-encoded data and referenced via data URI. For example:
 
 ```javascript
@@ -953,6 +960,7 @@ Images referred to by textures are stored in the `images` dictionary property of
     }
 },
 ```
+> **Implementation Note**: With WebGL API, the first pixel transferred from the `TexImageSource` (i.e., HTML Image object) to the WebGL implementation corresponds to the upper left corner of the source. Non-WebGL runtimes may need to flip Y axis to achieve correct texture rendering.
 
 #### Samplers
 
@@ -990,7 +998,7 @@ The following example defines a perspective camera with supplied values for Y fi
 "cameras": {
     "camera_0": {
         "perspective": {
-            "aspect_ratio": 1.5,
+            "aspectRatio": 1.5,
             "yfov": 0.660593,
             "zfar": 100,
             "znear": 0.01
@@ -1009,7 +1017,7 @@ glTF supports articulated and skinned animation via key frame animations of node
 
 All animations are stored in the `animations` dictionary property of the asset. An animation is defined as a set of channels (the `channels` property), a set of parameterized inputs (`parameters`) representing the key frame data, and samplers that interpolate between the key frames (the `samplers` property). All parameters must have the same number of elements.
 
-The following example defines an animating camera node. 
+The following example defines an animating camera node.
 
 ```javascript
         "animation_0": {
@@ -1036,7 +1044,6 @@ The following example defines an animating camera node.
                     }
                 }
             ],
-            "count": 901,
             "parameters": {
                 "TIME": "animAccessor_0",
                 "rotation": "animAccessor_3",
@@ -1065,7 +1072,7 @@ The following example defines an animating camera node.
 
 *Channels* connect the output values of the key frame animation to a specific node in the hierarchy. A channel's `sampler` property contains the ID of one of the samplers present in the containing animation's `samplers` property. The `target` property is an object that identifies which node to animate using its `id` property, and which property of the node to animate using `path`. Valid path names are `"translation"`, `"rotation"`, and `"scale."`
 
-The animation's *parameters* define the inputs to the animation: a set of floating point scalar values representing time (the `"TIME"` input); and sets of three-component floating-point vectors representing translation, rotation, and scale. Each of these inputs is stored in a buffer and accessed via an accessor.
+The animation's *parameters* define the inputs to the animation: a set of floating point scalar values representing time (the `"TIME"` input); and sets of three-component floating-point vectors representing translation or scale, or four-component floating-point vectors representing rotation. Each of these inputs is stored in a buffer and accessed via an accessor.
 
 Interpolation between keys is defined using *samplers*, which take an input value, such as time, and generate an output value based on the inputs defined in the `parameters` property, using the interpolation formula specified in the `interpolation` property.
 
@@ -1073,7 +1080,7 @@ Interpolation between keys is defined using *samplers*, which take an input valu
 
 glTF animations can be used to drive articulated or skinned animations. Skinned animation is achieved by animating the joints in the skin's joint hierarachy. (See the section on Skins above.)
 
-        
+
 <a name="metadata"></a>
 ## Metadata
 
@@ -1121,7 +1128,7 @@ All extensions used in a model are listed in the top-level `extensionsUsed` dict
 
 ```javascript
 "extensionsUsed": [
-   "EXT_binary_glTF"
+   "KHR_binary_glTF"
 ]
 ```
 
@@ -1159,6 +1166,9 @@ For more information on glTF extensions, consult the [extensions registry specif
       * [`functions`](#reference-technique.states.functions)
 * [`texture`](#reference-texture)
 
+This property reference applies to the WebGL 1.0.3 profile.  See `version` and `api` properties on ['asset.profile'](#reference-asset.profile).
+
+> In the future, other profiles, such as OpenGL, are expected.
 
 <!-- ======================================================================= -->
 <a name="reference-accessor"></a>
@@ -1187,7 +1197,7 @@ Additional properties are not allowed.
 * **JSON schema**: [accessor.schema.json](schema/accessor.schema.json)
 * **Example**: [accessors.json](schema/examples/accessors.json)
 
-### accessor.bufferView :white_check_mark: 
+### accessor.bufferView :white_check_mark:
 
 The ID of the [`bufferView`](#reference-bufferView).
 
@@ -1195,7 +1205,7 @@ The ID of the [`bufferView`](#reference-bufferView).
 * **Required**: Yes
 * **Minimum Length**`: >= 1`
 
-### accessor.byteOffset :white_check_mark: 
+### accessor.byteOffset :white_check_mark:
 
 The offset relative to the start of the [`bufferView`](#reference-bufferView) in bytes.  This must be a multiple of the size of the data type.
 
@@ -1214,7 +1224,7 @@ The stride, in bytes, between attributes referenced by this accessor.  When this
 * **Maximum**:` <= 255`
 * **Related WebGL functions**: `vertexAttribPointer()` stride parameter
 
-### accessor.componentType :white_check_mark: 
+### accessor.componentType :white_check_mark:
 
 The datatype of components in the attribute.  Valid values correspond to WebGL enums: `5120` (BYTE), `5121` (UNSIGNED_BYTE), `5122` (SHORT), `5123` (UNSIGNED_SHORT), and `5126` (FLOAT).  The corresponding typed arrays are `Int8Array`, `Uint8Array`, `Int16Array`, `Uint16Array`, and `Float32Array`, respectively.
 
@@ -1222,7 +1232,7 @@ The datatype of components in the attribute.  Valid values correspond to WebGL e
 * **Required**: Yes
 * **Allowed values**: `5120`, `5121`, `5122`, `5123`, `5126`
 
-### accessor.count :white_check_mark: 
+### accessor.count :white_check_mark:
 
 The number of attributes referenced by this accessor, not to be confused with the number of bytes or number of components.
 
@@ -1230,7 +1240,7 @@ The number of attributes referenced by this accessor, not to be confused with th
 * **Required**: Yes
 * **Minimum**:` >= 1`
 
-### accessor.type :white_check_mark: 
+### accessor.type :white_check_mark:
 
 Specifies if the attribute is a scalar, vector, or matrix, and the number of elements in the vector or matrix.
 
@@ -1240,14 +1250,14 @@ Specifies if the attribute is a scalar, vector, or matrix, and the number of ele
 
 ### accessor.max
 
-Maximum value of each component in this attribute.  When both min and max arrays are defined, they have the same length.  The length is determined by the value of the type property.
+Maximum value of each component in this attribute.  When both min and max arrays are defined, they have the same length.  The length is determined by the value of the type property; it can be `1`, `2`, `3`, `4`, `9`, or `16`.
 
 * **Type**: `number[1-16]`
 * **Required**: No
 
 ### accessor.min
 
-Minimum value of each component in this attribute.  When both min and max arrays are defined, they have the same length.  The length is determined by the value of the type property.
+Minimum value of each component in this attribute.  When both min and max arrays are defined, they have the same length.  The length is determined by the value of the type property; it can be `1`, `2`, `3`, `4`, `9`, or `16`.
 
 * **Type**: `number[1-16]`
 * **Required**: No
@@ -1362,7 +1372,7 @@ Additional properties are not allowed.
 
 **JSON schema**: [animation.channel.schema.json](schema/animation.channel.schema.json)
 
-### channel.sampler :white_check_mark: 
+### channel.sampler :white_check_mark:
 
 The ID of a sampler in this animation used to compute the value for the target, e.g., a node's translation, rotation, or scale (TRS).
 
@@ -1370,7 +1380,7 @@ The ID of a sampler in this animation used to compute the value for the target, 
 * **Required**: Yes
 * **Minimum Length**`: >= 1`
 
-### channel.target :white_check_mark: 
+### channel.target :white_check_mark:
 
 The ID of the node and TRS property to target.
 
@@ -1412,7 +1422,7 @@ Additional properties are not allowed.
 
 **JSON schema**: [animation.channel.target.schema.json](schema/animation.channel.target.schema.json)
 
-### target.id :white_check_mark: 
+### target.id :white_check_mark:
 
 The ID of the node to target.
 
@@ -1420,7 +1430,7 @@ The ID of the node to target.
 * **Required**: Yes
 * **Minimum Length**`: >= 1`
 
-### target.path :white_check_mark: 
+### target.path :white_check_mark:
 
 The name of the node's TRS property to modify.
 
@@ -1464,7 +1474,7 @@ Additional properties are not allowed.
 
 **JSON schema**: [animation.sampler.schema.json](schema/animation.sampler.schema.json)
 
-### sampler.input :white_check_mark: 
+### sampler.input :white_check_mark:
 
 The ID of a parameter in this animation to use as keyframe input.  This parameter must have type `FLOAT`.  The values represent time in seconds with `time[0] >= 0.0`, and monotonically increasing values, i.e., `time[n + 1] >= time[n]`.
 
@@ -1480,7 +1490,7 @@ Interpolation algorithm.  When an animation targets a node's rotation, and the a
 * **Required**: No, default: `"LINEAR"`
 * **Allowed values**: `"LINEAR"`
 
-### sampler.output :white_check_mark: 
+### sampler.output :white_check_mark:
 
 The ID of a parameter in this animation to use as keyframe output.
 
@@ -1556,7 +1566,7 @@ Specifies the target rendering API and version, e.g., WebGL 1.0.3.
 * **Type**: [`asset.profile`](#reference-asset.profile)
 * **Required**: No, default: `{}`
 
-### asset.version :white_check_mark: 
+### asset.version :white_check_mark:
 
 The glTF version.
 
@@ -1650,7 +1660,7 @@ Additional properties are not allowed.
 * **JSON schema**: [buffer.schema.json](schema/buffer.schema.json)
 * **Example**: [buffers.json](schema/examples/buffers.json)
 
-### buffer.uri :white_check_mark: 
+### buffer.uri :white_check_mark:
 
 The uri of the buffer.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.
 
@@ -1720,7 +1730,7 @@ Additional properties are not allowed.
 * **JSON schema**: [bufferView.schema.json](schema/bufferView.schema.json)
 * **Example**: [bufferViews.json](schema/examples/bufferViews.json)
 
-### bufferView.buffer :white_check_mark: 
+### bufferView.buffer :white_check_mark:
 
 The ID of the [`buffer`](#reference-buffer).
 
@@ -1728,7 +1738,7 @@ The ID of the [`buffer`](#reference-buffer).
 * **Required**: Yes
 * **Minimum Length**`: >= 1`
 
-### bufferView.byteOffset :white_check_mark: 
+### bufferView.byteOffset :white_check_mark:
 
 The offset into the [`buffer`](#reference-buffer) in bytes.
 
@@ -1812,7 +1822,7 @@ A perspective camera containing properties to create a perspective projection ma
 * **Type**: [`camera.perspective`](#reference-camera.perspective)
 * **Required**: No
 
-### camera.type :white_check_mark: 
+### camera.type :white_check_mark:
 
 Specifies if the camera uses a perspective or orthographic projection.  Based on this, either the camera's `perspective` or `orthographic` property will be defined.
 
@@ -1864,21 +1874,21 @@ Additional properties are not allowed.
 
 **JSON schema**: [camera.orthographic.schema.json](schema/camera.orthographic.schema.json)
 
-### orthographic.xmag :white_check_mark: 
+### orthographic.xmag :white_check_mark:
 
 The floating-point horizontal magnification of the view.
 
 * **Type**: `number`
 * **Required**: Yes
 
-### orthographic.ymag :white_check_mark: 
+### orthographic.ymag :white_check_mark:
 
 The floating-point vertical magnification of the view.
 
 * **Type**: `number`
 * **Required**: Yes
 
-### orthographic.zfar :white_check_mark: 
+### orthographic.zfar :white_check_mark:
 
 The floating-point distance to the far clipping plane.
 
@@ -1886,7 +1896,7 @@ The floating-point distance to the far clipping plane.
 * **Required**: Yes
 * **Minimum**:` >= 0`
 
-### orthographic.znear :white_check_mark: 
+### orthographic.znear :white_check_mark:
 
 The floating-point distance to the near clipping plane.
 
@@ -1939,7 +1949,7 @@ The floating-point aspect ratio of the field of view.  When this is undefined, t
 * **Required**: No
 * **Minimum**:` >= 0`
 
-### perspective.yfov :white_check_mark: 
+### perspective.yfov :white_check_mark:
 
 The floating-point vertical field of view in radians.
 
@@ -1947,7 +1957,7 @@ The floating-point vertical field of view in radians.
 * **Required**: Yes
 * **Minimum**:` >= 0`
 
-### perspective.zfar :white_check_mark: 
+### perspective.zfar :white_check_mark:
 
 The floating-point distance to the far clipping plane.  zfar must be greater than znear.
 
@@ -1955,7 +1965,7 @@ The floating-point distance to the far clipping plane.  zfar must be greater tha
 * **Required**: Yes
 * **Minimum**:` > 0`
 
-### perspective.znear :white_check_mark: 
+### perspective.znear :white_check_mark:
 
 The floating-point distance to the near clipping plane.  zfar must be greater than znear.
 
@@ -2203,7 +2213,7 @@ Additional properties are not allowed.
 * **JSON schema**: [image.schema.json](schema/image.schema.json)
 * **Example**: [images.json](schema/examples/images.json)
 
-### image.uri :white_check_mark: 
+### image.uri :white_check_mark:
 
 The uri of the image.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.  The image format must be jpg, png, bmp, or gif.
 
@@ -2257,7 +2267,7 @@ Additional properties are not allowed.
 
 ### material.technique
 
-The ID of the technique.  If this is not supplied, and no extension is present that defines material properties, then the primitive should be rendered using a default material with 50% gray emissive color.
+The ID of the technique.  If this is not supplied, and no extension is present that defines material properties, then the primitive should be rendered using a default material with 50% gray emissive color.  See [Appendix A](#appendix-a).
 
 * **Type**: `string`
 * **Required**: No
@@ -2379,11 +2389,13 @@ A dictionary object of strings, where each string is the ID of the accessor cont
 
 The ID of the accessor that contains the indices.  When this is not defined, the primitives should be rendered without indices using `drawArrays()`.
 
+When defined, the [`accessor`](#accessor) must contain indices: the bufferView referenced by the accessor must have a [`target`](#bufferviewtarget) equal to `34963` (ELEMENT_ARRAY_BUFFER); a `byteStride` that is tightly packed, i.e., `0` or the byte size of `componentType` in bytes; `componentType` must be `5121` (UNSIGNED_BYTE) or `5123` (UNSIGNED_SHORT); and `type` must be `"SCALAR"`.
+
 * **Type**: `string`
 * **Required**: No
 * **Minimum Length**`: >= 1`
 
-### primitive.material :white_check_mark: 
+### primitive.material :white_check_mark:
 
 The ID of the material to apply to this primitive when rendering.
 
@@ -2423,7 +2435,7 @@ A node in the node hierarchy.  A node can have either the `camera`, `meshes`, or
 
 In the later case, all `primitives` in the referenced `meshes` contain `JOINT` and `WEIGHT` attributes and the referenced [`material`](#reference-material)/[`technique`](#reference-technique) from each `primitive` has parameters with `JOINT` and `WEIGHT` semantics.
 
-A node can have either a `matrix` or any combination of `translation`/`rotation`/`scale` (TRS) properties.  If none are provided, the transform is the identity.
+A node can have either a `matrix` or any combination of `translation`/`rotation`/`scale` (TRS) properties. TRS properties are converted to matrices and postmultiplied in the `T * R * S` order to compose the transformation matrix. If none are provided, the transform is the identity.
 
 **Properties**
 
@@ -2436,7 +2448,7 @@ A node can have either a `matrix` or any combination of `translation`/`rotation`
 |**jointName**|`string`|Name used when this node is a joint in a skin.|No|
 |**matrix**|`number[16]`|A floating-point 4x4 transformation matrix stored in column-major order.|No, default: `[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]`|
 |**meshes**|`string[]`|The IDs of the [`mesh`](#reference-mesh) objects in this node.|No|
-|**rotation**|`number[4]`|The node's unit quaternion rotation in the order (x, y, z, w), where w is the scalar.|No, default: `[0,0,0,0.1]`|
+|**rotation**|`number[4]`|The node's unit quaternion rotation in the order (x, y, z, w), where w is the scalar.|No, default: `[0,0,0,1]`|
 |**scale**|`number[3]`|The node's non-uniform scale.|No, default: `[1,1,1]`|
 |**translation**|`number[3]`|The node's translation.|No, default: `[0,0,0]`|
 |**name**|`string`|The user-defined name of this object.|No|
@@ -2467,7 +2479,7 @@ The IDs of this node's children.
 
 ### node.skeletons
 
-The ID of skeleton nodes.  Each node defines a subtree, which has a `jointName` of the corresponding element in the referenced `skin.joints`.
+The ID of skeleton nodes.  Each node defines a subtree, which has a `jointName` of the corresponding element in the referenced `skin.jointNames`.
 
 * **Type**: `string[]`
    * Each element in the array must be unique.
@@ -2512,7 +2524,7 @@ The IDs of the meshes in this node.  Multiple meshes are allowed so each can sha
 The node's unit quaternion rotation in the order (x, y, z, w), where w is the scalar.
 
 * **Type**: `number[4]`
-* **Required**: No, default: `[0,0,0,0.1]`
+* **Required**: No, default: `[0,0,0,1]`
 
 ### node.scale
 
@@ -2584,7 +2596,7 @@ Names of GLSL vertex shader attributes.
 * **Required**: No, default: `[]`
 * **Related WebGL functions**: `bindAttribLocation()`
 
-### program.fragmentShader :white_check_mark: 
+### program.fragmentShader :white_check_mark:
 
 The ID of the fragment [`shader`](#reference-shader).
 
@@ -2592,7 +2604,7 @@ The ID of the fragment [`shader`](#reference-shader).
 * **Required**: Yes
 * **Minimum Length**`: >= 1`
 
-### program.vertexShader :white_check_mark: 
+### program.vertexShader :white_check_mark:
 
 The ID of the vertex [`shader`](#reference-shader).
 
@@ -2782,7 +2794,7 @@ Additional properties are not allowed.
 * **JSON schema**: [shader.schema.json](schema/shader.schema.json)
 * **Example**: [shaders.json](schema/examples/shaders.json)
 
-### shader.uri :white_check_mark: 
+### shader.uri :white_check_mark:
 
 The uri of the GLSL source.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.
 
@@ -2790,7 +2802,7 @@ The uri of the GLSL source.  Relative paths are relative to the .gltf file.  Ins
 * **Required**: Yes
 * **Format**: uri
 
-### shader.type :white_check_mark: 
+### shader.type :white_check_mark:
 
 The shader stage.  Allowed values are `35632` (FRAGMENT_SHADER) and `35633` (VERTEX_SHADER).
 
@@ -2850,7 +2862,7 @@ Floating-point 4x4 transformation matrix stored in column-major order.
 * **Type**: `number[16]`
 * **Required**: No, default: `[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]`
 
-### skin.inverseBindMatrices :white_check_mark: 
+### skin.inverseBindMatrices :white_check_mark:
 
 The ID of the accessor containing the floating-point 4x4 inverse-bind matrices.
 
@@ -2858,9 +2870,9 @@ The ID of the accessor containing the floating-point 4x4 inverse-bind matrices.
 * **Required**: Yes
 * **Minimum Length**`: >= 1`
 
-### skin.jointNames :white_check_mark: 
+### skin.jointNames :white_check_mark:
 
-Joint names of the joints (nodes with a `jointName` property) in this skin.  The array length is the same as the `count` property of the `inverseBindMatrices` accessor, and the same as the length of any skeleton array referencing the skin.
+Joint names of the joints (nodes with a `jointName` property) in this skin.  The array length is the same as the `count` property of the `inverseBindMatrices` accessor, and the same as the total quantity of all skeleton nodes from node-trees referenced by the skinned mesh instance node's `skeletons` array.
 
 * **Type**: `string[]`
    * Each element in the array must be unique.
@@ -2930,7 +2942,7 @@ A dictionary object of strings that maps GLSL attribute names to technique param
 * **Required**: No, default: `{}`
 * **Type of each property**: `string`
 
-### technique.program :white_check_mark: 
+### technique.program :white_check_mark:
 
 The ID of the program.
 
@@ -3002,19 +3014,21 @@ Additional properties are not allowed.
 
 When defined, the parameter is an array of count elements of the specified type.  Otherwise, the parameter is not an array.  When defined, `value` is an array with length equal to count, times the number of components in the type, e.g., `3` for `FLOAT_VEC3`.
 
+An array parameter of scalar values is not the same as a vector parameter of the same size; for example, when `count` is `2` and `type` is `5126` (FLOAT), the parameter is an array of two floating-point values, not a `FLOAT_VEC2`.
+
 * **Type**: `integer`
 * **Required**: No
 * **Minimum**:` >= 1`
 
 ### parameter.node
 
-The id of the [`node`](#reference-node) whose transform is used as the parameter's value.  When this is defined, `type` must be `35676` (FLOAT_MAT4).
+The id of the [`node`](#reference-node) whose transform is used as the parameter's value.  When this is defined, `type` must be `35676` (FLOAT_MAT4), therefore, when the semantic is `"MODELINVERSETRANSPOSE"`, `"MODELVIEWINVERSETRANSPOSE"`, or `"VIEWPORT"`, the `node` property can't be defined.
 
 * **Type**: `string`
 * **Required**: No
 * **Minimum Length**`: >= 1`
 
-### parameter.type :white_check_mark: 
+### parameter.type :white_check_mark:
 
 The datatype.  Allowed values are `5120` (BYTE), `5121` (UNSIGNED_BYTE), `5122` (SHORT), `5123` (UNSIGNED_SHORT), `5124` (INT), `5125` (UNSIGNED_INT), `5126` (FLOAT), `35664` (FLOAT_VEC2), `35665` (FLOAT_VEC3), `35666` (FLOAT_VEC4), `35667` (INT_VEC2), `35668` (INT_VEC3), `35669` (INT_VEC4), `35670` (BOOL), `35671` (BOOL_VEC2), `35672` (BOOL_VEC3), `35673` (BOOL_VEC4), `35674` (FLOAT_MAT2), `35675` (FLOAT_MAT3), `35676` (FLOAT_MAT4), and `35678` (SAMPLER_2D).
 
@@ -3024,7 +3038,7 @@ The datatype.  Allowed values are `5120` (BYTE), `5121` (UNSIGNED_BYTE), `5122` 
 
 ### parameter.semantic
 
-Identifies a parameter with a well-known meaning.  Uniform semantics include `"LOCAL"` (FLOAT_MAT4), `"MODEL"` (FLOAT_MAT4), `"VIEW"` (FLOAT_MAT4), `"PROJECTION"` (FLOAT_MAT4), `"MODELVIEW"` (FLOAT_MAT4), `"MODELVIEWPROJECTION"` (FLOAT_MAT4), `"MODELINVERSE"` (FLOAT_MAT4), `"VIEWINVERSE"` (FLOAT_MAT4), `"PROJECTIONINVERSE"` (FLOAT_MAT4), `"MODELVIEWINVERSE"` (FLOAT_MAT4), `"MODELVIEWPROJECTIONINVERSE"` (FLOAT_MAT4), `"MODELINVERSETRANSPOSE"` (FLOAT_MAT3), `"MODELVIEWINVERSETRANSPOSE"` (FLOAT_MAT3), `"VIEWPORT"` (FLOAT_VEC4).  Attribute semantics include `"POSITION"`, `"NORMAL"`, `"TEXCOORD"`, `"COLOR"`, `"JOINT"`, `"JOINTMATRIX"`, and `"WEIGHT"`.  Attribute semantics can be of the form `[semantic]_[set_index]`, e.g., `"TEXCOORD_0"`.
+Identifies a parameter with a well-known meaning.  Uniform semantics include `"LOCAL"` (FLOAT_MAT4), `"MODEL"` (FLOAT_MAT4), `"VIEW"` (FLOAT_MAT4), `"PROJECTION"` (FLOAT_MAT4), `"MODELVIEW"` (FLOAT_MAT4), `"MODELVIEWPROJECTION"` (FLOAT_MAT4), `"MODELINVERSE"` (FLOAT_MAT4), `"VIEWINVERSE"` (FLOAT_MAT4), `"PROJECTIONINVERSE"` (FLOAT_MAT4), `"MODELVIEWINVERSE"` (FLOAT_MAT4), `"MODELVIEWPROJECTIONINVERSE"` (FLOAT_MAT4), `"MODELINVERSETRANSPOSE"` (FLOAT_MAT3), `"MODELVIEWINVERSETRANSPOSE"` (FLOAT_MAT3), `"VIEWPORT"` (FLOAT_VEC4), `"JOINTMATRIX"` (FLOAT_MAT4).  Attribute semantics include `"POSITION"`, `"NORMAL"`, `"TEXCOORD"`, `"COLOR"`, `"JOINT"`, and `"WEIGHT"`.  Attribute semantics can be of the form `[semantic]_[set_index]`, e.g., `"TEXCOORD_0"`.
 
 * **Type**: `string`
 * **Required**: No
@@ -3116,7 +3130,7 @@ Arguments for fixed-function rendering state functions other than `enable()`/`di
 |---|----|-----------|--------|
 |**blendColor**|`number[4]`|Floating-point values passed to `blendColor()`. [red, green, blue, alpha]|No, default: `[0,0,0,0]`|
 |**blendEquationSeparate**|`integer[2]`|Integer values passed to `blendEquationSeparate()`.|No, default: `[32774,32774]`|
-|**blendFuncSeparate**|`integer[4]`|Integer values passed to `blendFuncSeparate()`.|No, default: `[1,1,0,0]`|
+|**blendFuncSeparate**|`integer[4]`|Integer values passed to `blendFuncSeparate()`.|No, default: `[1,0,1,0]`|
 |**colorMask**|`boolean[4]`|Boolean values passed to `colorMask()`. [red, green, blue, alpha].|No, default: `[true,true,true,true]`|
 |**cullFace**|`integer[1]`|Integer value passed to `cullFace()`.|No, default: `[1029]`|
 |**depthFunc**|`integer[1]`|Integer values passed to `depthFunc()`.|No, default: `[513]`|
@@ -3152,11 +3166,11 @@ Integer values passed to `blendEquationSeparate()`. [rgb, alpha]. Valid values c
 
 ### functions.blendFuncSeparate
 
-Integer values passed to `blendFuncSeparate()`. [srcRGB, srcAlpha, dstRGB, dstAlpha]. Valid values correspond to WebGL enums: `0` (ZERO), `1` (ONE), `768` (SRC_COLOR), `769` (ONE_MINUS_SRC_COLOR), `774` (DST_COLOR), `775` (ONE_MINUS_DST_COLOR), `770` (SRC_ALPHA), `771` (ONE_MINUS_SRC_ALPHA), `772` (DST_ALPHA), `773` (ONE_MINUS_DST_ALPHA), `32769` (CONSTANT_COLOR), `32770` (ONE_MINUS_CONSTANT_COLOR), `32771` (CONSTANT_ALPHA), `32772` (ONE_MINUS_CONSTANT_ALPHA), and `776` (SRC_ALPHA_SATURATE).
+Integer values passed to `blendFuncSeparate()`. [srcRGB, dstRGB, srcAlpha, dstAlpha]. Valid values correspond to WebGL enums: `0` (ZERO), `1` (ONE), `768` (SRC_COLOR), `769` (ONE_MINUS_SRC_COLOR), `774` (DST_COLOR), `775` (ONE_MINUS_DST_COLOR), `770` (SRC_ALPHA), `771` (ONE_MINUS_SRC_ALPHA), `772` (DST_ALPHA), `773` (ONE_MINUS_DST_ALPHA), `32769` (CONSTANT_COLOR), `32770` (ONE_MINUS_CONSTANT_COLOR), `32771` (CONSTANT_ALPHA), `32772` (ONE_MINUS_CONSTANT_ALPHA), and `776` (SRC_ALPHA_SATURATE).
 
 * **Type**: `integer[4]`
    * Each element in the array must be one of the following values: `0`, `1`, `768`, `769`, `774`, `775`, `770`, `771`, `772`, `773`, `32769`, `32770`, `32771`, `32772`, `776`.
-* **Required**: No, default: `[1,1,0,0]`
+* **Required**: No, default: `[1,0,1,0]`
 * **Related WebGL functions**: `blendFuncSeparate()`
 
 ### functions.colorMask
@@ -3296,7 +3310,7 @@ The texture's internal format.  Valid values correspond to WebGL enums: `6406` (
 * **Allowed values**: `6406`, `6407`, `6408`, `6409`, `6410`
 * **Related WebGL functions**: `texImage2D()` internalFormat parameter
 
-### texture.sampler :white_check_mark: 
+### texture.sampler :white_check_mark:
 
 The ID of the [`sampler`](#reference-sampler) used by this texture.
 
@@ -3304,7 +3318,7 @@ The ID of the [`sampler`](#reference-sampler) used by this texture.
 * **Required**: Yes
 * **Minimum Length**`: >= 1`
 
-### texture.source :white_check_mark: 
+### texture.source :white_check_mark:
 
 The ID of the [`image`](#reference-image) used by this texture.
 
@@ -3361,3 +3375,112 @@ Application-specific data.
 * Scott Hunter, Analytical Graphics, Inc.
 * Brandon Jones, Google
 * Ed Mackey, Analytical Graphics, Inc.
+
+
+<a name="appendix-a"></a>
+# Appendix A: Default Material
+
+If `material.technique` is not supplied, and no extension is present that defines material properties, then the object will be rendered using a default material with 50% gray emissive color.  The following glTF is an example of the default material.
+
+```javascript
+"materials": {
+    "Effect1": {
+        "values": {
+            "emission": [
+                0.8,
+                0.8,
+                0.8,
+                1
+            ]
+        },
+        "technique": "technique0"
+    }
+},
+"programs": {
+    "program0": {
+        "attributes": [
+            "a_position"
+        ],
+        "fragmentShader": "fragmentShader0",
+        "vertexShader": "vertexShader0"
+    }
+},
+"shaders": {
+    "vertexShader0": {
+        "type": 35633,
+        "uri": "data:text/plain;base64,..." // see below
+    },
+    "fragmentShader0": {
+        "type": 35632,
+        "uri": "data:text/plain;base64,..." // see blow
+    }
+},
+"techniques": {
+    "technique0": {
+        "attributes": {
+            "a_position": "position"
+        },
+        "parameters": {
+            "modelViewMatrix": {
+                "semantic": "MODELVIEW",
+                "type": 35676
+            },
+            "projectionMatrix": {
+                "semantic": "PROJECTION",
+                "type": 35676
+            },
+            "emission": {
+                "type": 35666
+            },
+            "position": {
+                "semantic": "POSITION",
+                "type": 35665
+            }
+        },
+        "program": "program0",
+        "states": {
+            "enable": [
+                2884,
+                2929
+            ]
+        },
+        "uniforms": {
+            "u_modelViewMatrix": "modelViewMatrix",
+            "u_projectionMatrix": "projectionMatrix",
+            "u_emission": "emission"
+        }
+    }
+}
+```
+
+Vertex Shader:
+```glsl
+precision highp float;
+
+uniform mat4 u_modelViewMatrix;
+uniform mat4 u_projectionMatrix;
+
+attribute vec3 a_position;
+
+void main(void)
+{
+    gl_Position = u_projectionMatrix * u_modelViewMatrix * vec4(a_position,1.0);
+}
+```
+
+Fragment Shader:
+```glsl
+precision highp float;
+
+uniform vec4 u_emission;
+
+void main(void)
+{
+    gl_FragColor = u_emission;
+}
+```
+
+<a name="appendix-b"></a>
+# Appendix B: Full Khronos Trademark Statement
+
+Copyright (C) 2013-2016 The Khronos Group Inc. All Rights Reserved. This specification is protected by copyright laws and contains material proprietary to the Khronos Group, Inc. It or any components may not be reproduced, republished, distributed, transmitted, displayed, broadcast, or otherwise exploited in any manner without the express prior written permission of Khronos Group. You may use this specification for implementing the functionality therein, without altering or removing any trademark, copyright or other notice from the specification, but the receipt or possession of this specification does not convey any rights to reproduce, disclose, or distribute its contents, or to manufacture, use, or sell anything that it may describe, in whole or in part. Khronos Group grants express permission to any current Promoter, Contributor or Adopter member of Khronos to copy and redistribute UNMODIFIED versions of this specification in any fashion, provided that NO CHARGE is made for the specification and the latest available update of the specification for any version of the API is used whenever possible. Such distributed specification may be reformatted AS LONG AS the contents of the specification are not changed in any way. The specification may be incorporated into a product that is sold as long as such product includes significant independent work developed by the seller. A link to the current version of this specification on the Khronos Group website should be included whenever possible with specification distributions. Khronos Group makes no, and expressly disclaims any, representations or warranties, express or implied, regarding this specification, including, without limitation, any implied warranties of merchantability or fitness for a particular purpose or non-infringement of any intellectual property. Khronos Group makes no, and expressly disclaims any, warranties, express or implied, regarding the correctness, accuracy, completeness, timeliness, and reliability of the specification. Under no circumstances will the Khronos Group, or any of its Promoters, Contributors or Members or their respective partners, officers, directors, employees, agents, or representatives be liable for any damages, whether direct, indirect, special or consequential damages for lost revenues, lost profits, or otherwise, arising from or in connection with these materials. Khronos, Vulkan, SYCL, SPIR, WebGL, EGL, COLLADA, StreamInput, OpenVX, OpenKCam, glTF, OpenKODE, OpenVG, OpenWF, OpenSL ES, OpenMAX, OpenMAX AL, OpenMAX IL and OpenMAX DL are trademarks and WebCL is a certification mark of The Khronos Group Inc. OpenCL is a trademark of Apple Inc. and OpenGL and OpenML are registered trademarks and the OpenGL ES and OpenGL SC logos are trademarks of Silicon Graphics International used under license by Khronos. All other product names, trademarks, and/or company names are used solely for identification and belong to their respective owners.
