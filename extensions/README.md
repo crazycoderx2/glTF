@@ -1,16 +1,21 @@
 # glTF Extension Registry
 
-## Draft Khronos extensions
+## Khronos extensions
 
 * [KHR_binary_glTF](Khronos/KHR_binary_glTF/README.md)
-* [EXT_quantized_attributes](MultiVendor/EXT_quantized_attributes/README.md)
+
+## Draft Khronos extensions
 
 _Draft Khronos extensions are not ratified yet._
+
+* [KHR_materials_common](Khronos/KHR_materials_common)
+
 
 ## Vendor extensions
 
 * [CESIUM_RTC](Vendor/CESIUM_RTC/README.md)
 * [WEB3D_streaming](Vendor/WEB3D_streaming/README.md)
+* [WEB3D_quantized_attributes](Vendor/WEB3D_quantized_attributes/README.md)
 
 # About glTF Extensions
 
